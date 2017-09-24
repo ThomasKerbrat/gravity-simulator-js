@@ -34,11 +34,28 @@ class Body {
         this.p = this.position = position
         this.s = this.speed = speed
         this.a = this.acceleration = acceleration
-        this.m = this.mass = mass
+        this._mass = mass
+        this._radius = null
     }
 
     get radius() {
-        return Math.sqrt(this.mass / Math.PI) / 1e3
+        return this._radius === null ? this.computeRadius() : this._radius
+    }
+
+    get mass() {
+        return this._mass
+    }
+
+    set mass(value) {
+        this._mass = value
+        this.computeRadius()
+    }
+
+    computeRadius() {
+        // Compute the radius for a sphere from volume = mass
+        // return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / 1e1
+        // log10
+        return Math.log10(this._mass) / 2
     }
 }
 
@@ -56,6 +73,7 @@ const playground = {
     width: 1200,
     height: 700,
 }
+
 let isMoving = false
 let mouseMoveOrigin = null
 let userTranslation = { x: 0, y: 0 }
@@ -64,7 +82,7 @@ ctx.translate(0.5, 0.5)
 
 
 
-// Events handlers
+// Event handlers
 
 canvasElement.addEventListener('mousedown', function (event) {
     isMoving = true
@@ -88,6 +106,11 @@ canvasElement.addEventListener('mouseup', function (event) {
 canvasElement.addEventListener('dblclick', function (event) {
     userTranslation.x = 0
     userTranslation.y = 0
+})
+
+// TODO: Implement
+document.addEventListener('keypress', function (evnet) {
+    console.info(event)
 })
 
 
@@ -115,13 +138,6 @@ for (let index = 0; index < 500; index++) {
         1e6,
     ))
 }
-
-bodies.push(new Body(
-    new Vector(playground.width / 2, playground.height / 2),
-    Vector.null(),
-    Vector.null(),
-    1e7,
-))
 
 
 
@@ -151,6 +167,17 @@ setInterval(function computeForces() {
     }
 
     // Force computation
+    const distances = new Map()
+    for (let a, i = 1; i < bodies.length; i++) {
+        a = bodies[i]
+        distances.set(i, new Map())
+        for (let b, j = 0; j <= i - 1; j++) {
+            b = bodies[j]
+            const distance = Math.sqrt(Math.pow(b.p.x - a.p.x, 2) + Math.pow(b.p.y - a.p.y, 2))
+            distances.get(i).set(j, distance)
+        }
+    }
+
     for (let i = 0; i < bodies.length; i++) {
         const bodyA = bodies[i]
         bodyA.a.x = 0
@@ -159,7 +186,7 @@ setInterval(function computeForces() {
         for (let j = 0; j < bodies.length; j++) {
             if (i !== j) {
                 const bodyB = bodies[j]
-                const distance = Math.sqrt(Math.pow(bodyB.p.x - bodyA.p.x, 2) + Math.pow(bodyB.p.y - bodyA.p.y, 2))
+                const distance = i < j ? distances.get(j).get(i) : distances.get(i).get(j)
                 const force = G * bodyA.mass * bodyB.mass / Math.pow(distance, 2)
                 const angle = Math.atan2(bodyB.p.y - bodyA.p.y, bodyB.p.x - bodyA.p.x)
                 const a_x = Math.cos(angle) * force
@@ -177,13 +204,13 @@ setInterval(function computeForces() {
         body.s.y += body.a.y / calculationsPerSeconds
         body.p.x += body.s.x / calculationsPerSeconds
         body.p.y += body.s.y / calculationsPerSeconds
-        // if (body.p.x < 0) body.p.x += playground.width, resetVelocity(body)
-        // if (body.p.x >= playground.width) body.p.x -= playground.width, resetVelocity(body)
-        // if (body.p.y < 0) body.p.y += playground.height, resetVelocity(body)
-        // if (body.p.y >= playground.height) body.p.y -= playground.height, resetVelocity(body)
+        // if (body.p.x < 0) body.p.x += playground.width // , resetSpeed(body)
+        // if (body.p.x >= playground.width) body.p.x -= playground.width // , resetSpeed(body)
+        // if (body.p.y < 0) body.p.y += playground.height // , resetSpeed(body)
+        // if (body.p.y >= playground.height) body.p.y -= playground.height // , resetSpeed(body)
     }
 
-    function resetVelocity(body) {
+    function resetSpeed(body) {
         body.s.x = 0
         body.s.y = 0
     }
@@ -196,6 +223,11 @@ requestAnimationFrame(render)
 function render() {
     requestAnimationFrame(render)
 
+    // Center the camera on to the barycenter
+    // userTranslation.x = barycenter_x + playground.x / 2
+    // userTranslation.y = barycenter_y + playground.y / 2
+
+    // Draw
     ctx.fillStyle = 'black'
     ctx.fillRect(0, 0, playground.width, playground.height)
 
@@ -227,24 +259,25 @@ function render() {
         ctx.closePath()
     }
 
-    const weighted_mean_x_num = bodies.map(body => body.p.x * body.mass).reduce((sum, body) => sum + body, 0)
-    const weighted_mean_x_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
-    const weighted_mean_x = weighted_mean_x_num / weighted_mean_x_den
+    // Compute barycenter
+    // const barycenter_x_num = bodies.map(body => body.p.x * body.mass).reduce((sum, body) => sum + body, 0)
+    // const barycenter_x_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
+    // const barycenter_x = barycenter_x_num / barycenter_x_den
 
-    const weighted_mean_y_num = bodies.map(body => body.p.y * body.mass).reduce((sum, body) => sum + body, 0)
-    const weighted_mean_y_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
-    const weighted_mean_y = weighted_mean_y_num / weighted_mean_y_den
+    // const barycenter_y_num = bodies.map(body => body.p.y * body.mass).reduce((sum, body) => sum + body, 0)
+    // const barycenter_y_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
+    // const barycenter_y = barycenter_y_num / barycenter_y_den
 
-    ctx.strokeStyle = 'blue'
-    ctx.beginPath()
-    ctx.moveTo(weighted_mean_x + userTranslation.x, weighted_mean_y - 10 + userTranslation.y)
-    ctx.lineTo(weighted_mean_x + userTranslation.x, weighted_mean_y + 10 + userTranslation.y)
-    ctx.stroke()
-    ctx.closePath()
+    // ctx.strokeStyle = 'blue'
+    // ctx.beginPath()
+    // ctx.moveTo(barycenter_x + userTranslation.x, barycenter_y - 10 + userTranslation.y)
+    // ctx.lineTo(barycenter_x + userTranslation.x, barycenter_y + 10 + userTranslation.y)
+    // ctx.stroke()
+    // ctx.closePath()
 
-    ctx.beginPath()
-    ctx.moveTo(weighted_mean_x - 10 + userTranslation.x, weighted_mean_y + userTranslation.y)
-    ctx.lineTo(weighted_mean_x + 10 + userTranslation.x, weighted_mean_y + userTranslation.y)
-    ctx.stroke()
-    ctx.closePath()
+    // ctx.beginPath()
+    // ctx.moveTo(barycenter_x - 10 + userTranslation.x, barycenter_y + userTranslation.y)
+    // ctx.lineTo(barycenter_x + 10 + userTranslation.x, barycenter_y + userTranslation.y)
+    // ctx.stroke()
+    // ctx.closePath()
 }
