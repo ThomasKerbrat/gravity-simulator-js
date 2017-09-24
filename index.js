@@ -175,6 +175,7 @@ setInterval(function computeForces() {
             if (i !== j && bodyA !== null && bodyB !== null) {
                 const distance = i < j ? distances[j][i] : distances[i][j]
                 if (distance < (bodyA.radius + bodyB.radius)) {
+                    // Weighted arithmetic mean, the heaviest body will proportionally conserve more of its properties.
                     bodyA.p.x = (bodyA.p.x * bodyA.mass + bodyB.p.x * bodyB.mass) / (bodyA.mass + bodyB.mass)
                     bodyA.p.y = (bodyA.p.y * bodyA.mass + bodyB.p.y * bodyB.mass) / (bodyA.mass + bodyB.mass)
                     bodyA.s.x = (bodyA.s.x * bodyA.mass + bodyB.s.x * bodyB.mass) / (bodyA.mass + bodyB.mass)
