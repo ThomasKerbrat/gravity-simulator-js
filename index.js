@@ -130,12 +130,32 @@ function randomInt(minOrMax, max) {
 
 const bodies = []
 
-for (let index = 0; index < 500; index++) {
+// Random full screen
+// for (let index = 0; index < 500; index++) {
+//     bodies.push(new Body(
+//         new Vector(randomInt(0, playground.width), randomInt(0, playground.height)),
+//         Vector.null(),
+//         Vector.null(),
+//         1e6,
+//     ))
+// }
+
+// Accretion disk
+const radius = 300
+for (let tetha, distance, index = 0; index < 500; index++) {
+    tetha = Math.random() * 2 * Math.PI
+    distance = Math.random()
     bodies.push(new Body(
-        new Vector(randomInt(0, playground.width), randomInt(0, playground.height)),
+        new Vector(
+            Math.cos(tetha) * distance * radius + playground.width / 2,
+            Math.sin(tetha) * distance * radius + playground.height / 2,
+        ),
+        new Vector(
+            Math.cos(tetha - 1 / 2 * Math.PI) * 0,
+            Math.sin(tetha - 1 / 2 * Math.PI) * 0,
+        ),
         Vector.null(),
-        Vector.null(),
-        1e6,
+        (1 - distance) * 1e6,
     ))
 }
 
@@ -144,13 +164,16 @@ for (let index = 0; index < 500; index++) {
 // Computations
 
 setInterval(function computeForces() {
+    let distances
+
     // Collisions
+    distances = computeDistances(bodies)
     for (let i = 0; i < bodies.length; i++) {
         const bodyA = bodies[i]
         for (let j = 0; j < bodies.length; j++) {
             const bodyB = bodies[j]
-            if (i !== j) {
-                const distance = Math.sqrt(Math.pow(bodyB.p.x - bodyA.p.x, 2) + Math.pow(bodyB.p.y - bodyA.p.y, 2))
+            if (i !== j && bodyA !== null && bodyB !== null) {
+                const distance = i < j ? distances[j][i] : distances[i][j]
                 if (distance < (bodyA.radius + bodyB.radius)) {
                     bodyA.p.x = (bodyA.p.x * bodyA.mass + bodyB.p.x * bodyB.mass) / (bodyA.mass + bodyB.mass)
                     bodyA.p.y = (bodyA.p.y * bodyA.mass + bodyB.p.y * bodyB.mass) / (bodyA.mass + bodyB.mass)
@@ -159,25 +182,23 @@ setInterval(function computeForces() {
                     bodyA.a.x = (bodyA.a.x * bodyA.mass + bodyB.a.x * bodyB.mass) / (bodyA.mass + bodyB.mass)
                     bodyA.a.y = (bodyA.a.y * bodyA.mass + bodyB.a.y * bodyB.mass) / (bodyA.mass + bodyB.mass)
                     bodyA.mass += bodyB.mass
-                    bodies.splice(j, 1)
-                    j -= 1
+                    bodies[j] = null
                 }
             }
         }
     }
 
-    // Force computation
-    const distances = new Map()
-    for (let a, i = 1; i < bodies.length; i++) {
-        a = bodies[i]
-        distances.set(i, new Map())
-        for (let b, j = 0; j <= i - 1; j++) {
-            b = bodies[j]
-            const distance = Math.sqrt(Math.pow(b.p.x - a.p.x, 2) + Math.pow(b.p.y - a.p.y, 2))
-            distances.get(i).set(j, distance)
+    // Clean null bodies
+    for (let index = 0; index < bodies.length; index++) {
+        if (bodies[index] === null) {
+            bodies.splice(index--, 1)
+        } else {
+            continue
         }
     }
 
+    // Force computation
+    distances = computeDistances(bodies)
     for (let i = 0; i < bodies.length; i++) {
         const bodyA = bodies[i]
         bodyA.a.x = 0
@@ -186,7 +207,7 @@ setInterval(function computeForces() {
         for (let j = 0; j < bodies.length; j++) {
             if (i !== j) {
                 const bodyB = bodies[j]
-                const distance = i < j ? distances.get(j).get(i) : distances.get(i).get(j)
+                const distance = i < j ? distances[j][i] : distances[i][j]
                 const force = G * bodyA.mass * bodyB.mass / Math.pow(distance, 2)
                 const angle = Math.atan2(bodyB.p.y - bodyA.p.y, bodyB.p.x - bodyA.p.x)
                 const a_x = Math.cos(angle) * force
@@ -216,21 +237,35 @@ setInterval(function computeForces() {
     }
 }, 1000 / calculationsPerSeconds)
 
+function computeDistances(bodies) {
+    const distances = {}
+    for (let a, i = 1; i < bodies.length; i++) {
+        a = bodies[i]
+        distances[i] = {}
+        for (let b, j = 0; j <= i - 1; j++) {
+            b = bodies[j]
+            distances[i][j] = Math.sqrt(
+                Math.pow(b.p.x - a.p.x, 2) + Math.pow(b.p.y - a.p.y, 2)
+            )
+        }
+    }
+    return distances
+}
+
 
 
 requestAnimationFrame(render)
+let lastRenderTime = Date.now()
+let lastDisplay = { time: Date.now(), value: 0 }
 
 function render() {
     requestAnimationFrame(render)
 
-    // Center the camera on to the barycenter
-    // userTranslation.x = barycenter_x + playground.x / 2
-    // userTranslation.y = barycenter_y + playground.y / 2
-
-    // Draw
+    // Clean
     ctx.fillStyle = 'black'
     ctx.fillRect(0, 0, playground.width, playground.height)
 
+    // Bodies
     for (let body, width, index = 0; index < bodies.length; index++) {
         body = bodies[index]
         width = body.radius
@@ -280,4 +315,16 @@ function render() {
     // ctx.lineTo(barycenter_x + 10 + userTranslation.x, barycenter_y + userTranslation.y)
     // ctx.stroke()
     // ctx.closePath()
+
+    // FPS
+    if (Date.now() - lastDisplay.time > 1000) {
+        lastDisplay.time = Date.now()
+        lastDisplay.value = Math.floor(1000 / (Date.now() - lastRenderTime))
+    }
+    lastRenderTime = Date.now()
+
+    ctx.font = '16px Arial'
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
+    ctx.fillText('' + lastDisplay.value + ' FPS', 5, 21)
+    ctx.fillText('' + bodies.length + ' Bodies', 5, 42)
 }
