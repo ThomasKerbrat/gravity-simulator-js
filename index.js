@@ -1,4 +1,11 @@
 
+/**
+ * TODO:
+ * - Fixed body position
+ * - Camera zoom
+ * - Camera follow
+ */
+
 // Classes
 
 class Vector {
@@ -53,9 +60,9 @@ class Body {
 
     computeRadius() {
         // Compute the radius for a sphere from volume = mass
-        // return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / 1e1
+        return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / 1e1
         // log10
-        return Math.log10(this._mass) / 2
+        // return this._radius = Math.log10(this._mass) / 2
     }
 }
 
@@ -130,7 +137,7 @@ function randomInt(minOrMax, max) {
 
 const bodies = []
 
-// Random full screen
+// SEED: Random full screen
 // for (let index = 0; index < 500; index++) {
 //     bodies.push(new Body(
 //         new Vector(randomInt(0, playground.width), randomInt(0, playground.height)),
@@ -140,7 +147,7 @@ const bodies = []
 //     ))
 // }
 
-// Accretion disk
+// SEED: Accretion disk
 const radius = 300
 for (let tetha, distance, index = 0; index < 500; index++) {
     tetha = Math.random() * 2 * Math.PI
@@ -151,11 +158,11 @@ for (let tetha, distance, index = 0; index < 500; index++) {
             Math.sin(tetha) * distance * radius + playground.height / 2,
         ),
         new Vector(
-            Math.cos(tetha - 1 / 2 * Math.PI) * 0,
-            Math.sin(tetha - 1 / 2 * Math.PI) * 0,
+            Math.cos(tetha - 1 / 2 * Math.PI) * 2,
+            Math.sin(tetha - 1 / 2 * Math.PI) * 2,
         ),
         Vector.null(),
-        (1 - distance) * 1e6,
+        (1 - distance) * (2 * 1e5 - 2 * 1e4) + 2 * 1e4,
     ))
 }
 
@@ -163,7 +170,7 @@ for (let tetha, distance, index = 0; index < 500; index++) {
 
 // Computations
 
-setInterval(function computeForces() {
+setInterval(function tick() {
     let distances
 
     // Collisions
@@ -199,23 +206,35 @@ setInterval(function computeForces() {
     }
 
     // Force computation
-    distances = computeDistances(bodies)
-    for (let i = 0; i < bodies.length; i++) {
-        const bodyA = bodies[i]
-        bodyA.a.x = 0
-        bodyA.a.y = 0
+    for (let index = 0; index < bodies.length; index++) {
+        bodies[index].acceleration.x = 0
+        bodies[index].acceleration.y = 0
+    }
 
-        for (let j = 0; j < bodies.length; j++) {
-            if (i !== j) {
-                const bodyB = bodies[j]
-                const distance = i < j ? distances[j][i] : distances[i][j]
-                const force = G * bodyA.mass * bodyB.mass / Math.pow(distance, 2)
-                const angle = Math.atan2(bodyB.p.y - bodyA.p.y, bodyB.p.x - bodyA.p.x)
-                const a_x = Math.cos(angle) * force
-                const a_y = Math.sin(angle) * force
-                bodyA.a.x += a_x
-                bodyA.a.y += a_y
-            }
+    distances = computeDistances(bodies)
+
+    for (let a, i = 1; i < bodies.length; i++) {
+        a = bodies[i]
+        for (let b, j = 0; j <= i - 1; j++) {
+            b = bodies[j]
+            distance = distances[i][j]
+            force = G * a.mass * b.mass / Math.pow(distance, 2)
+
+            let angle, acceleration_x, acceleration_y
+
+            // Apply force on a
+            angle = Math.atan2(b.position.y - a.position.y, b.position.x - a.position.x)
+            acceleration_x = Math.cos(angle) * force
+            acceleration_y = Math.sin(angle) * force
+            a.acceleration.x += acceleration_x
+            a.acceleration.y += acceleration_y
+
+            // Apply force on b
+            angle = Math.atan2(a.position.y - b.position.y, a.position.x - b.position.x)
+            acceleration_x = Math.cos(angle) * force
+            acceleration_y = Math.sin(angle) * force
+            b.acceleration.x += acceleration_x
+            b.acceleration.y += acceleration_y
         }
     }
 
@@ -325,7 +344,7 @@ function render() {
     lastRenderTime = Date.now()
 
     ctx.font = '16px Arial'
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
+    ctx.fillStyle = 'rgba(255, 0, 0, 1)'
     ctx.fillText('' + lastDisplay.value + ' FPS', 5, 21)
     ctx.fillText('' + bodies.length + ' Bodies', 5, 42)
 }
