@@ -322,7 +322,7 @@ setInterval(function tick() {
 
             let angle
             let distance = distances[i][j]
-            let force = G * bodyA.mass * bodyB.mass / distance * distance
+            let force = G * bodyA.mass * bodyB.mass / (distance * distance)
 
             // Sum force on a
             angle = Math.atan2(bodyB.position.y - bodyA.position.y, bodyB.position.x - bodyA.position.x)
