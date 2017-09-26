@@ -60,9 +60,10 @@ class Body {
 
     computeRadius() {
         // Compute the radius for a sphere from volume = mass
-        return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / 1e1
+        return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / (1 * 1e3)
         // log10
         // return this._radius = Math.log10(this._mass) / 2
+        // return this._radius = 2
     }
 }
 
@@ -138,33 +139,75 @@ function randomInt(minOrMax, max) {
 const bodies = []
 
 // SEED: Random full screen
-// for (let index = 0; index < 500; index++) {
+for (let index = 0; index < 1000; index++) {
+    bodies.push(new Body(
+        new Vector(
+            randomInt(0 / 4 * playground.width, 4 / 4 * playground.width),
+            randomInt(0 / 4 * playground.height, 4 / 4 * playground.height),
+        ),
+        Vector.null(),
+        Vector.null(),
+        randomInt(1e8, 1e9),
+    ))
+}
+
+// SEED: Accretion disk
+// const radius = 300
+// for (let tetha, distance, index = 0; index < 500; index++) {
+//     tetha = Math.random() * 2 * Math.PI
+//     distance = Math.random()
 //     bodies.push(new Body(
-//         new Vector(randomInt(0, playground.width), randomInt(0, playground.height)),
+//         new Vector(
+//             Math.cos(tetha) * distance * radius + playground.width / 2,
+//             Math.sin(tetha) * distance * radius + playground.height / 2,
+//         ),
+//         new Vector(
+//             Math.cos(tetha - 1 / 2 * Math.PI) * 2 * 1e1,
+//             Math.sin(tetha - 1 / 2 * Math.PI) * 2 * 1e1,
+//         ),
 //         Vector.null(),
-//         Vector.null(),
-//         1e6,
+//         (1 - distance) * (2 * 1e9 - 2 * 1e2) + 2 * 1e2,
 //     ))
 // }
 
-// SEED: Accretion disk
-const radius = 300
-for (let tetha, distance, index = 0; index < 500; index++) {
-    tetha = Math.random() * 2 * Math.PI
-    distance = Math.random()
-    bodies.push(new Body(
-        new Vector(
-            Math.cos(tetha) * distance * radius + playground.width / 2,
-            Math.sin(tetha) * distance * radius + playground.height / 2,
-        ),
-        new Vector(
-            Math.cos(tetha - 1 / 2 * Math.PI) * 2,
-            Math.sin(tetha - 1 / 2 * Math.PI) * 2,
-        ),
-        Vector.null(),
-        (1 - distance) * (2 * 1e5 - 2 * 1e4) + 2 * 1e4,
-    ))
-}
+// SEED: Two-body system
+// bodies.push(new Body(
+//     new Vector(playground.width / 2, playground.height / 2),
+//     Vector.null(),
+//     Vector.null(),
+//     1e10,
+// ))
+// bodies.push(new Body(
+//     new Vector(playground.width * 11 / 16, playground.height / 2),
+//     new Vector(0, -10),
+//     Vector.null(),
+//     1e7,
+// ))
+
+// SEED: Planet rings
+// bodies.push(new Body(
+//     new Vector(playground.width / 2, playground.height / 2),
+//     Vector.null(),
+//     Vector.null(),
+//     1e12,
+// ))
+// const dMax = 300, dMin = 100, mMax = 2 * 1e8, mMin = 2 * 1e7
+// for (let tetha, distance, index = 0; index < 999; index++) {
+//     tetha = Math.random() * 2 * Math.PI
+//     distance = Math.random() * (dMax - dMin) + dMin
+//     bodies.push(new Body(
+//         new Vector(
+//             Math.cos(tetha) * distance + playground.width / 2,
+//             Math.sin(tetha) * distance + playground.height / 2,
+//         ),
+//         new Vector(
+//             Math.cos(tetha - 1 / 2 * Math.PI) * (2 * 1e2),
+//             Math.sin(tetha - 1 / 2 * Math.PI) * (2 * 1e2),
+//         ),
+//         Vector.null(),
+//         (mMax - mMin) + mMin,
+//     ))
+// }
 
 
 
@@ -200,60 +243,55 @@ setInterval(function tick() {
     for (let index = 0; index < bodies.length; index++) {
         if (bodies[index] === null) {
             bodies.splice(index--, 1)
-        } else {
-            continue
         }
     }
 
-    // Force computation
+    // Initialize null vectors for the sum of the forces
+    let forces = []
     for (let index = 0; index < bodies.length; index++) {
-        bodies[index].acceleration.x = 0
-        bodies[index].acceleration.y = 0
+        // bodies[index].acceleration.x = 0
+        // bodies[index].acceleration.y = 0
+        forces.push(Vector.null())
     }
 
     distances = computeDistances(bodies)
 
-    for (let a, i = 1; i < bodies.length; i++) {
-        a = bodies[i]
-        for (let b, j = 0; j <= i - 1; j++) {
-            b = bodies[j]
-            distance = distances[i][j]
-            force = G * a.mass * b.mass / Math.pow(distance, 2)
+    // Force computation
+    for (let bodyA, forcesOnA, i = 1; i < bodies.length; i++) {
+        bodyA = bodies[i]
+        forcesOnA = forces[i]
+        for (let bodyB, forcesOnB, j = 0; j <= i - 1; j++) {
+            bodyB = bodies[j]
+            forcesOnB = forces[j]
 
-            let angle, acceleration_x, acceleration_y
+            let angle
+            let distance = distances[i][j]
+            let force = G * bodyA.mass * bodyB.mass / distance * distance
 
-            // Apply force on a
-            angle = Math.atan2(b.position.y - a.position.y, b.position.x - a.position.x)
-            acceleration_x = Math.cos(angle) * force
-            acceleration_y = Math.sin(angle) * force
-            a.acceleration.x += acceleration_x
-            a.acceleration.y += acceleration_y
+            // Sum force on a
+            angle = Math.atan2(bodyB.position.y - bodyA.position.y, bodyB.position.x - bodyA.position.x)
+            forcesOnA.x += Math.cos(angle) * force
+            forcesOnA.y += Math.sin(angle) * force
 
-            // Apply force on b
-            angle = Math.atan2(a.position.y - b.position.y, a.position.x - b.position.x)
-            acceleration_x = Math.cos(angle) * force
-            acceleration_y = Math.sin(angle) * force
-            b.acceleration.x += acceleration_x
-            b.acceleration.y += acceleration_y
+            // Sum force on b
+            angle = Math.atan2(bodyA.position.y - bodyB.position.y, bodyA.position.x - bodyB.position.x)
+            forcesOnB.x += Math.cos(angle) * force
+            forcesOnB.y += Math.sin(angle) * force
         }
     }
 
     // Bodies shifting
-    for (let i = 0; i < bodies.length; i++) {
-        const body = bodies[i]
-        body.s.x += body.a.x / calculationsPerSeconds
-        body.s.y += body.a.y / calculationsPerSeconds
-        body.p.x += body.s.x / calculationsPerSeconds
-        body.p.y += body.s.y / calculationsPerSeconds
-        // if (body.p.x < 0) body.p.x += playground.width // , resetSpeed(body)
-        // if (body.p.x >= playground.width) body.p.x -= playground.width // , resetSpeed(body)
-        // if (body.p.y < 0) body.p.y += playground.height // , resetSpeed(body)
-        // if (body.p.y >= playground.height) body.p.y -= playground.height // , resetSpeed(body)
-    }
+    for (let index = 0; index < bodies.length; index++) {
+        const body = bodies[index]
 
-    function resetSpeed(body) {
-        body.s.x = 0
-        body.s.y = 0
+        body.acceleration.x = forces[index].x / body.mass
+        body.acceleration.y = forces[index].y / body.mass
+
+        body.speed.x += body.acceleration.x / calculationsPerSeconds
+        body.speed.y += body.acceleration.y / calculationsPerSeconds
+
+        body.position.x += body.speed.x / calculationsPerSeconds
+        body.position.y += body.speed.y / calculationsPerSeconds
     }
 }, 1000 / calculationsPerSeconds)
 
@@ -294,24 +332,25 @@ function render() {
         ctx.beginPath()
         ctx.arc(body.p.x + userTranslation.x, body.p.y + userTranslation.y, width, 0, 2 * Math.PI)
         ctx.fillStyle = 'white'
+        // ctx.fillStyle = 'rgb(255, ' + (1 / body.mass * 255) + ', ' + (1 / body.mass * 255) + ' + '
         ctx.fill()
         ctx.closePath()
 
-        // speed vector
-        ctx.strokeStyle = 'red'
-        ctx.beginPath()
-        ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
-        ctx.lineTo((body.p.x + body.s.x * 1e0) + userTranslation.x, (body.p.y + body.s.y * 1e0) + userTranslation.y)
-        ctx.stroke()
-        ctx.closePath()
+        // // speed vector
+        // ctx.strokeStyle = 'red'
+        // ctx.beginPath()
+        // ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
+        // ctx.lineTo((body.p.x + body.s.x * 1e0) + userTranslation.x, (body.p.y + body.s.y * 1e0) + userTranslation.y)
+        // ctx.stroke()
+        // ctx.closePath()
 
-        // acceleration vector
-        ctx.strokeStyle = 'green'
-        ctx.beginPath()
-        ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
-        ctx.lineTo((body.p.x + body.a.x * 1e0) + userTranslation.x, (body.p.y + body.a.y * 1e0) + userTranslation.y)
-        ctx.stroke()
-        ctx.closePath()
+        // // acceleration vector
+        // ctx.strokeStyle = 'green'
+        // ctx.beginPath()
+        // ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
+        // ctx.lineTo((body.p.x + body.a.x * 1e0) + userTranslation.x, (body.p.y + body.a.y * 1e0) + userTranslation.y)
+        // ctx.stroke()
+        // ctx.closePath()
     }
 
     // Compute barycenter
