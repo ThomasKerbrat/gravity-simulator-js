@@ -215,8 +215,6 @@ for (let index = 0; index < 999; index++) {
     const velocity = Math.sqrt((G * 1e12) / distance)
     const mass = randomInt(mMin, mMax)
 
-    console.log(velocity)
-
     bodies.push(new Body(
         new Vector(
             Math.cos(tetha) * distance + playground.width / 2,
