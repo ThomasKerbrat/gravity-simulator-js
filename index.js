@@ -38,9 +38,9 @@ class Vector {
 
 class Body {
     constructor(position, speed, acceleration, mass) {
-        this.p = this.position = position
-        this.s = this.speed = speed
-        this.a = this.acceleration = acceleration
+        this.position = position
+        this.speed = speed
+        this.acceleration = acceleration
         this._mass = mass
         this._radius = null
     }
@@ -87,6 +87,9 @@ let mouseMoveOrigin = null
 let userTranslation = { x: 0, y: 0 }
 
 const config = {
+    simulation: {
+        collisions: true,
+    },
     graphics: {
         velocity: false,
         acceleration: false,
@@ -121,6 +124,10 @@ canvasElement.addEventListener('mouseup', function (event) {
 canvasElement.addEventListener('dblclick', function (event) {
     userTranslation.x = 0
     userTranslation.y = 0
+})
+
+document.getElementById('input-collisions').addEventListener('click', function (event) {
+    config.simulation.collisions = event.target.checked
 })
 
 document.getElementById('button-velocity-vector').addEventListener('click', function (event) {
@@ -201,21 +208,26 @@ bodies.push(new Body(
     Vector.null(),
     1e12,
 ))
-const dMax = 300, dMin = 100, mMax = 2 * 1e8, mMin = 2 * 1e7
-for (let tetha, distance, index = 0; index < 499; index++) {
-    tetha = Math.random() * 2 * Math.PI
-    distance = Math.random() * (dMax - dMin) + dMin
+const dMax = 300, dMin = 100, mMax = 1 * 1e9, mMin = 1 * 1e9
+for (let index = 0; index < 999; index++) {
+    const tetha = Math.random() * 2 * Math.PI
+    const distance = Math.random() * (dMax - dMin) + dMin
+    const velocity = Math.sqrt((G * 1e12) / distance)
+    const mass = randomInt(mMin, mMax)
+
+    console.log(velocity)
+
     bodies.push(new Body(
         new Vector(
             Math.cos(tetha) * distance + playground.width / 2,
             Math.sin(tetha) * distance + playground.height / 2,
         ),
         new Vector(
-            Math.cos(tetha - 1 / 2 * Math.PI) * (5 * 1e1),
-            Math.sin(tetha - 1 / 2 * Math.PI) * (5 * 1e1),
+            Math.cos(tetha - 0.5 * Math.PI) * velocity * 5 * 1e1,
+            Math.sin(tetha - 0.5 * Math.PI) * velocity * 5 * 1e1,
         ),
         Vector.null(),
-        (mMax - mMin) + mMin,
+        mass,
     ))
 }
 
@@ -245,33 +257,50 @@ for (let tetha, distance, index = 0; index < 499; index++) {
 setInterval(function tick() {
     let distances
 
-    // Collisions
-    distances = computeDistances(bodies)
-    for (let i = 0; i < bodies.length; i++) {
-        const bodyA = bodies[i]
-        for (let j = 0; j < bodies.length; j++) {
-            const bodyB = bodies[j]
-            if (i !== j && bodyA !== null && bodyB !== null) {
-                const distance = i < j ? distances[j][i] : distances[i][j]
-                if (distance < (bodyA.radius + bodyB.radius)) {
-                    // Weighted arithmetic mean, the heaviest body will proportionally conserve more of its properties.
-                    bodyA.p.x = (bodyA.p.x * bodyA.mass + bodyB.p.x * bodyB.mass) / (bodyA.mass + bodyB.mass)
-                    bodyA.p.y = (bodyA.p.y * bodyA.mass + bodyB.p.y * bodyB.mass) / (bodyA.mass + bodyB.mass)
-                    bodyA.s.x = (bodyA.s.x * bodyA.mass + bodyB.s.x * bodyB.mass) / (bodyA.mass + bodyB.mass)
-                    bodyA.s.y = (bodyA.s.y * bodyA.mass + bodyB.s.y * bodyB.mass) / (bodyA.mass + bodyB.mass)
-                    bodyA.a.x = (bodyA.a.x * bodyA.mass + bodyB.a.x * bodyB.mass) / (bodyA.mass + bodyB.mass)
-                    bodyA.a.y = (bodyA.a.y * bodyA.mass + bodyB.a.y * bodyB.mass) / (bodyA.mass + bodyB.mass)
-                    bodyA.mass += bodyB.mass
-                    bodies[j] = null
+    if (config.simulation.collisions) {
+        // Collisions
+        distances = computeDistances(bodies)
+        for (let i = 0; i < bodies.length; i++) {
+            const bodyA = bodies[i]
+            for (let j = 0; j < bodies.length; j++) {
+                const bodyB = bodies[j]
+                if (i !== j && bodyA !== null && bodyB !== null) {
+                    const distance = i < j ? distances[j][i] : distances[i][j]
+                    if (distance < (bodyA.radius + bodyB.radius)) {
+                        // Weighted arithmetic mean, the heaviest body will proportionally conserve more of its properties.
+                        bodyA.position.x =
+                            (bodyA.position.x * bodyA.mass + bodyB.position.x * bodyB.mass) /
+                            (bodyA.mass + bodyB.mass)
+                        bodyA.position.y =
+                            (bodyA.position.y * bodyA.mass + bodyB.position.y * bodyB.mass) /
+                            (bodyA.mass + bodyB.mass)
+
+                        bodyA.speed.x =
+                            (bodyA.speed.x * bodyA.mass + bodyB.speed.x * bodyB.mass) /
+                            (bodyA.mass + bodyB.mass)
+                        bodyA.speed.y =
+                            (bodyA.speed.y * bodyA.mass + bodyB.speed.y * bodyB.mass) /
+                            (bodyA.mass + bodyB.mass)
+
+                        bodyA.acceleration.x =
+                            (bodyA.acceleration.x * bodyA.mass + bodyB.acceleration.x * bodyB.mass) /
+                            (bodyA.mass + bodyB.mass)
+                        bodyA.acceleration.y =
+                            (bodyA.acceleration.y * bodyA.mass + bodyB.acceleration.y * bodyB.mass) /
+                            (bodyA.mass + bodyB.mass)
+
+                        bodyA.mass += bodyB.mass
+                        bodies[j] = null
+                    }
                 }
             }
         }
-    }
 
-    // Clean null bodies
-    for (let index = 0; index < bodies.length; index++) {
-        if (bodies[index] === null) {
-            bodies.splice(index--, 1)
+        // Clean null bodies
+        for (let index = 0; index < bodies.length; index++) {
+            if (bodies[index] === null) {
+                bodies.splice(index--, 1)
+            }
         }
     }
 
@@ -332,7 +361,7 @@ function computeDistances(bodies) {
         for (let b, j = 0; j <= i - 1; j++) {
             b = bodies[j]
             distances[i][j] = Math.sqrt(
-                Math.pow(b.p.x - a.p.x, 2) + Math.pow(b.p.y - a.p.y, 2)
+                Math.pow(b.position.x - a.position.x, 2) + Math.pow(b.position.y - a.position.y, 2)
             )
         }
     }
@@ -359,7 +388,7 @@ function render() {
 
         // body
         ctx.beginPath()
-        ctx.arc(body.p.x + userTranslation.x, body.p.y + userTranslation.y, width, 0, 2 * Math.PI)
+        ctx.arc(body.position.x + userTranslation.x, body.position.y + userTranslation.y, width, 0, 2 * Math.PI)
         ctx.fillStyle = 'white'
         // ctx.fillStyle = 'rgb(255, ' + (1 / body.mass * 255) + ', ' + (1 / body.mass * 255) + ' + '
         ctx.fill()
@@ -369,8 +398,14 @@ function render() {
         if (config.graphics.velocity) {
             ctx.strokeStyle = 'red'
             ctx.beginPath()
-            ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
-            ctx.lineTo((body.p.x + body.s.x * 1e0) + userTranslation.x, (body.p.y + body.s.y * 1e0) + userTranslation.y)
+            ctx.moveTo(
+                (body.position.x) + userTranslation.x,
+                (body.position.y) + userTranslation.y,
+            )
+            ctx.lineTo(
+                (body.position.x + body.speed.x * 1e0) + userTranslation.x,
+                (body.position.y + body.speed.y * 1e0) + userTranslation.y,
+            )
             ctx.stroke()
             ctx.closePath()
         }
@@ -379,19 +414,25 @@ function render() {
         if (config.graphics.acceleration) {
             ctx.strokeStyle = 'green'
             ctx.beginPath()
-            ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
-            ctx.lineTo((body.p.x + body.a.x * 1e0) + userTranslation.x, (body.p.y + body.a.y * 1e0) + userTranslation.y)
+            ctx.moveTo(
+                (body.position.x) + userTranslation.x,
+                (body.position.y) + userTranslation.y,
+            )
+            ctx.lineTo(
+                (body.position.x + body.acceleration.x * 1e0) + userTranslation.x,
+                (body.position.y + body.acceleration.y * 1e0) + userTranslation.y,
+            )
             ctx.stroke()
             ctx.closePath()
         }
     }
 
     // Compute barycenter
-    // const barycenter_x_num = bodies.map(body => body.p.x * body.mass).reduce((sum, body) => sum + body, 0)
+    // const barycenter_x_num = bodies.map(body => body.position.x * body.mass).reduce((sum, body) => sum + body, 0)
     // const barycenter_x_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
     // const barycenter_x = barycenter_x_num / barycenter_x_den
 
-    // const barycenter_y_num = bodies.map(body => body.p.y * body.mass).reduce((sum, body) => sum + body, 0)
+    // const barycenter_y_num = bodies.map(body => body.position.y * body.mass).reduce((sum, body) => sum + body, 0)
     // const barycenter_y_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
     // const barycenter_y = barycenter_y_num / barycenter_y_den
 
