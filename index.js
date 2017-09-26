@@ -92,6 +92,7 @@ const config = {
     graphics: {
         velocity: false,
         acceleration: false,
+        barycenter: false,
     }
 }
 
@@ -135,6 +136,10 @@ document.getElementById('button-velocity-vector').addEventListener('click', func
 
 document.getElementById('button-acceleration-vector').addEventListener('click', function (event) {
     config.graphics.acceleration = event.target.checked
+})
+
+document.getElementById('button-barycenter').addEventListener('click', function (event) {
+    config.graphics.barycenter = event.target.checked
 })
 
 
@@ -392,26 +397,28 @@ function render() {
     }
 
     // Compute barycenter
-    // const barycenter_x_num = bodies.map(body => body.position.x * body.mass).reduce((sum, body) => sum + body, 0)
-    // const barycenter_x_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
-    // const barycenter_x = barycenter_x_num / barycenter_x_den
-
-    // const barycenter_y_num = bodies.map(body => body.position.y * body.mass).reduce((sum, body) => sum + body, 0)
-    // const barycenter_y_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
-    // const barycenter_y = barycenter_y_num / barycenter_y_den
-
-    // ctx.strokeStyle = 'blue'
-    // ctx.beginPath()
-    // ctx.moveTo(barycenter_x + userTranslation.x, barycenter_y - 10 + userTranslation.y)
-    // ctx.lineTo(barycenter_x + userTranslation.x, barycenter_y + 10 + userTranslation.y)
-    // ctx.stroke()
-    // ctx.closePath()
-
-    // ctx.beginPath()
-    // ctx.moveTo(barycenter_x - 10 + userTranslation.x, barycenter_y + userTranslation.y)
-    // ctx.lineTo(barycenter_x + 10 + userTranslation.x, barycenter_y + userTranslation.y)
-    // ctx.stroke()
-    // ctx.closePath()
+    if (config.graphics.barycenter) {
+        const barycenter_x_num = bodies.map(body => body.position.x * body.mass).reduce((sum, body) => sum + body, 0)
+        const barycenter_x_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
+        const barycenter_x = barycenter_x_num / barycenter_x_den
+    
+        const barycenter_y_num = bodies.map(body => body.position.y * body.mass).reduce((sum, body) => sum + body, 0)
+        const barycenter_y_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
+        const barycenter_y = barycenter_y_num / barycenter_y_den
+    
+        ctx.strokeStyle = 'blue'
+        ctx.beginPath()
+        ctx.moveTo(barycenter_x + userTranslation.x, barycenter_y - 10 + userTranslation.y)
+        ctx.lineTo(barycenter_x + userTranslation.x, barycenter_y + 10 + userTranslation.y)
+        ctx.stroke()
+        ctx.closePath()
+    
+        ctx.beginPath()
+        ctx.moveTo(barycenter_x - 10 + userTranslation.x, barycenter_y + userTranslation.y)
+        ctx.lineTo(barycenter_x + 10 + userTranslation.x, barycenter_y + userTranslation.y)
+        ctx.stroke()
+        ctx.closePath()
+    }
 
     // FPS
     if (Date.now() - lastDisplay.time > 1000) {
