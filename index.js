@@ -86,6 +86,13 @@ let isMoving = false
 let mouseMoveOrigin = null
 let userTranslation = { x: 0, y: 0 }
 
+const config = {
+    graphics: {
+        velocity: false,
+        acceleration: false,
+    }
+}
+
 ctx.translate(0.5, 0.5)
 
 
@@ -116,9 +123,12 @@ canvasElement.addEventListener('dblclick', function (event) {
     userTranslation.y = 0
 })
 
-// TODO: Implement
-document.addEventListener('keypress', function (evnet) {
-    console.info(event)
+document.getElementById('button-velocity-vector').addEventListener('click', function (event) {
+    config.graphics.velocity = event.target.checked
+})
+
+document.getElementById('button-acceleration-vector').addEventListener('click', function (event) {
+    config.graphics.acceleration = event.target.checked
 })
 
 
@@ -355,21 +365,25 @@ function render() {
         ctx.fill()
         ctx.closePath()
 
-        // // speed vector
-        // ctx.strokeStyle = 'red'
-        // ctx.beginPath()
-        // ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
-        // ctx.lineTo((body.p.x + body.s.x * 1e0) + userTranslation.x, (body.p.y + body.s.y * 1e0) + userTranslation.y)
-        // ctx.stroke()
-        // ctx.closePath()
+        // speed vector
+        if (config.graphics.velocity) {
+            ctx.strokeStyle = 'red'
+            ctx.beginPath()
+            ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
+            ctx.lineTo((body.p.x + body.s.x * 1e0) + userTranslation.x, (body.p.y + body.s.y * 1e0) + userTranslation.y)
+            ctx.stroke()
+            ctx.closePath()
+        }
 
-        // // acceleration vector
-        // ctx.strokeStyle = 'green'
-        // ctx.beginPath()
-        // ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
-        // ctx.lineTo((body.p.x + body.a.x * 1e0) + userTranslation.x, (body.p.y + body.a.y * 1e0) + userTranslation.y)
-        // ctx.stroke()
-        // ctx.closePath()
+        // acceleration vector
+        if (config.graphics.acceleration) {
+            ctx.strokeStyle = 'green'
+            ctx.beginPath()
+            ctx.moveTo((body.p.x) + userTranslation.x, (body.p.y) + userTranslation.y)
+            ctx.lineTo((body.p.x + body.a.x * 1e0) + userTranslation.x, (body.p.y + body.a.y * 1e0) + userTranslation.y)
+            ctx.stroke()
+            ctx.closePath()
+        }
     }
 
     // Compute barycenter

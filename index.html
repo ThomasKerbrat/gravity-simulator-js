@@ -9,10 +9,50 @@
             canvas {
                 border: 1px solid black;
             }
+            .gravity-simulator {
+                display: flex;
+                flex-direction: row;
+            }
         </style>
     </head>
     <body>
-        <canvas id="canvas" width="700" height="700"></canvas>
+        <div class="gravity-simulator">
+            <canvas id="canvas" width="700" height="700"></canvas>
+            <div>
+                <!-- <fieldset>
+                    <legend>Controls</legend>
+                    <button id="button-start">Start</button>
+                    <button id="button-pause">Pause</button>
+                    <button id="button-step">Step</button>
+                    <button id="button-stop">Stop</button>
+                    <button id="button-clear">Clear</button>
+                </fieldset> -->
+                <!-- <fieldset>
+                    <legend>Simulation Parameters</legend>
+                    <input type="number" id="input-tick-per-second">
+                    <label for="input-tick-per-second">Tick per second</label>
+                    <br>
+                    <input type="number" id="input-frame-per-second">
+                    <label for="input-frame-per-second">Frame per second</label>
+                </fieldset> -->
+                <fieldset>
+                    <legend>Graphics</legend>
+                    <input type="checkbox" id="button-velocity-vector">
+                    <label for="button-velocity-vector">Velocity vector</label>
+                    <input type="checkbox" id="button-acceleration-vector">
+                    <label for="button-acceleration-vector">Acceleration vector</label>
+                </fieldset>
+                <fieldset>
+                    <legend>Commands</legend>
+                    <input type="radio" name="input-commands" id="input-move" checked="checked">
+                    <label for="input-move">Move (double click goes to origin)</label>
+                    <!-- <br>
+                    <input type="radio" name="input-commands" id="input-insert-body">
+                    <label for="input-insert-body">Insert body</label> -->
+                </fieldset>
+            </div>
+        </div>
+
         <script src="index.js"></script>
     </body>
 </html>
