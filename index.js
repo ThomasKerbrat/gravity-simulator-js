@@ -60,7 +60,7 @@ class Body {
 
     computeRadius() {
         // Compute the radius for a sphere from volume = mass
-        return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / (1 * 1e3)
+        return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / (5 * 1e2)
         // log10
         // return this._radius = Math.log10(this._mass) / 2
         // return this._radius = 2
@@ -78,7 +78,7 @@ const G = 6.674e-11
 const calculationsPerSeconds = 25
 
 const playground = {
-    width: 1200,
+    width: 700,
     height: 700,
 }
 
@@ -139,17 +139,17 @@ function randomInt(minOrMax, max) {
 const bodies = []
 
 // SEED: Random full screen
-for (let index = 0; index < 1000; index++) {
-    bodies.push(new Body(
-        new Vector(
-            randomInt(0 / 4 * playground.width, 4 / 4 * playground.width),
-            randomInt(0 / 4 * playground.height, 4 / 4 * playground.height),
-        ),
-        Vector.null(),
-        Vector.null(),
-        randomInt(1e8, 1e9),
-    ))
-}
+// for (let index = 0; index < 1000; index++) {
+//     bodies.push(new Body(
+//         new Vector(
+//             randomInt(0 / 4 * playground.width, 4 / 4 * playground.width),
+//             randomInt(0 / 4 * playground.height, 4 / 4 * playground.height),
+//         ),
+//         Vector.null(),
+//         Vector.null(),
+//         randomInt(1e8, 1e9),
+//     ))
+// }
 
 // SEED: Accretion disk
 // const radius = 300
@@ -185,28 +185,47 @@ for (let index = 0; index < 1000; index++) {
 // ))
 
 // SEED: Planet rings
-// bodies.push(new Body(
-//     new Vector(playground.width / 2, playground.height / 2),
-//     Vector.null(),
-//     Vector.null(),
-//     1e12,
-// ))
-// const dMax = 300, dMin = 100, mMax = 2 * 1e8, mMin = 2 * 1e7
-// for (let tetha, distance, index = 0; index < 999; index++) {
-//     tetha = Math.random() * 2 * Math.PI
-//     distance = Math.random() * (dMax - dMin) + dMin
-//     bodies.push(new Body(
-//         new Vector(
-//             Math.cos(tetha) * distance + playground.width / 2,
-//             Math.sin(tetha) * distance + playground.height / 2,
-//         ),
-//         new Vector(
-//             Math.cos(tetha - 1 / 2 * Math.PI) * (2 * 1e2),
-//             Math.sin(tetha - 1 / 2 * Math.PI) * (2 * 1e2),
-//         ),
-//         Vector.null(),
-//         (mMax - mMin) + mMin,
-//     ))
+bodies.push(new Body(
+    new Vector(playground.width / 2, playground.height / 2),
+    Vector.null(),
+    Vector.null(),
+    1e12,
+))
+const dMax = 300, dMin = 100, mMax = 2 * 1e8, mMin = 2 * 1e7
+for (let tetha, distance, index = 0; index < 499; index++) {
+    tetha = Math.random() * 2 * Math.PI
+    distance = Math.random() * (dMax - dMin) + dMin
+    bodies.push(new Body(
+        new Vector(
+            Math.cos(tetha) * distance + playground.width / 2,
+            Math.sin(tetha) * distance + playground.height / 2,
+        ),
+        new Vector(
+            Math.cos(tetha - 1 / 2 * Math.PI) * (5 * 1e1),
+            Math.sin(tetha - 1 / 2 * Math.PI) * (5 * 1e1),
+        ),
+        Vector.null(),
+        (mMax - mMin) + mMin,
+    ))
+}
+
+// SEED: Heterogeneous distribution
+// const numberOfCells = 4
+// for (let i = 0; i < numberOfCells; i++) {
+//     for (let j = 0; j < numberOfCells; j++) {
+//         const numberOfBodies = Math.floor(Math.random() * 2) * 128
+//         for (let k = 0; k < numberOfBodies; k++) {
+//             bodies.push(new Body(
+//                 new Vector(
+//                     Math.random() * (playground.width / numberOfCells) + (i * playground.width / numberOfCells),
+//                     Math.random() * (playground.height / numberOfCells) + (j * playground.height / numberOfCells),
+//                 ),
+//                 Vector.null(),
+//                 Vector.null(),
+//                 randomInt(1e8, 1e9),
+//             ))
+//         }
+//     }
 // }
 
 
