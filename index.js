@@ -1,12 +1,11 @@
 
 /**
  * TODO:
- * - Fixed body position
  * - Camera zoom
  * - Camera follow
  */
 
-// Classes
+// ===== Classes ===== //
 
 class Vector {
     constructor(x, y) {
@@ -69,7 +68,7 @@ class Body {
 
 
 
-// Global variables
+// ===== Global variables ====== //
 
 const canvasElement = document.getElementById('canvas')
 const ctx = canvasElement.getContext('2d')
@@ -100,7 +99,7 @@ ctx.translate(0.5, 0.5)
 
 
 
-// Event handlers
+// ===== Event handlers ===== //
 
 canvasElement.addEventListener('mousedown', function (event) {
     isMoving = true
@@ -140,7 +139,7 @@ document.getElementById('button-acceleration-vector').addEventListener('click', 
 
 
 
-// Initialization
+// ===== Initialization ===== //
 
 function randomInt(minOrMax, max) {
     const number = Math.random()
@@ -156,7 +155,7 @@ function randomInt(minOrMax, max) {
 const bodies = []
 
 // SEED: Random full screen
-// for (let index = 0; index < 1000; index++) {
+// for (let index = 0; index < 500; index++) {
 //     bodies.push(new Body(
 //         new Vector(
 //             randomInt(0 / 4 * playground.width, 4 / 4 * playground.width),
@@ -164,42 +163,9 @@ const bodies = []
 //         ),
 //         Vector.null(),
 //         Vector.null(),
-//         randomInt(1e8, 1e9),
+//         1e9,
 //     ))
 // }
-
-// SEED: Accretion disk
-// const radius = 300
-// for (let tetha, distance, index = 0; index < 500; index++) {
-//     tetha = Math.random() * 2 * Math.PI
-//     distance = Math.random()
-//     bodies.push(new Body(
-//         new Vector(
-//             Math.cos(tetha) * distance * radius + playground.width / 2,
-//             Math.sin(tetha) * distance * radius + playground.height / 2,
-//         ),
-//         new Vector(
-//             Math.cos(tetha - 1 / 2 * Math.PI) * 2 * 1e1,
-//             Math.sin(tetha - 1 / 2 * Math.PI) * 2 * 1e1,
-//         ),
-//         Vector.null(),
-//         (1 - distance) * (2 * 1e9 - 2 * 1e2) + 2 * 1e2,
-//     ))
-// }
-
-// SEED: Two-body system
-// bodies.push(new Body(
-//     new Vector(playground.width / 2, playground.height / 2),
-//     Vector.null(),
-//     Vector.null(),
-//     1e10,
-// ))
-// bodies.push(new Body(
-//     new Vector(playground.width * 11 / 16, playground.height / 2),
-//     new Vector(0, -10),
-//     Vector.null(),
-//     1e7,
-// ))
 
 // SEED: Planet rings
 bodies.push(new Body(
@@ -208,8 +174,8 @@ bodies.push(new Body(
     Vector.null(),
     1e12,
 ))
-const dMax = 300, dMin = 100, mMax = 1 * 1e9, mMin = 1 * 1e9
-for (let index = 0; index < 999; index++) {
+const dMax = 300, dMin = 20, mMax = 1 * 1e9, mMin = 1 * 1e9
+for (let index = 0; index < 499; index++) {
     const tetha = Math.random() * 2 * Math.PI
     const distance = Math.random() * (dMax - dMin) + dMin
     const velocity = Math.sqrt((G * 1e12) / distance)
@@ -221,8 +187,8 @@ for (let index = 0; index < 999; index++) {
             Math.sin(tetha) * distance + playground.height / 2,
         ),
         new Vector(
-            Math.cos(tetha - 0.5 * Math.PI) * velocity * 5 * 1e1,
-            Math.sin(tetha - 0.5 * Math.PI) * velocity * 5 * 1e1,
+            Math.cos(tetha - 0.5 * Math.PI) * velocity,
+            Math.sin(tetha - 0.5 * Math.PI) * velocity,
         ),
         Vector.null(),
         mass,
@@ -250,7 +216,7 @@ for (let index = 0; index < 999; index++) {
 
 
 
-// Computations
+// ===== Computations ===== //
 
 setInterval(function tick() {
     let distances
