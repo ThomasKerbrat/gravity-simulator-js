@@ -77,13 +77,17 @@ const G = 6.674e-11
 const calculationsPerSeconds = 25
 
 const playground = {
-    width: 700,
+    width: 1200,
     height: 700,
 }
 
 let isMoving = false
 let mouseMoveOrigin = null
-let userTranslation = { x: 0, y: 0 }
+let cameraTranslation = {
+    x: 0,
+    y: 0,
+    zoom: 1,
+}
 
 const config = {
     simulation: {
@@ -105,15 +109,15 @@ ctx.translate(0.5, 0.5)
 canvasElement.addEventListener('mousedown', function (event) {
     isMoving = true
     mouseMoveOrigin = {
-        x: event.clientX - userTranslation.x,
-        y: event.clientY - userTranslation.y,
+        x: event.clientX - cameraTranslation.x,
+        y: event.clientY - cameraTranslation.y,
     }
 })
 
 canvasElement.addEventListener('mousemove', function (event) {
     if (isMoving) {
-        userTranslation.x = event.clientX - mouseMoveOrigin.x
-        userTranslation.y = event.clientY - mouseMoveOrigin.y
+        cameraTranslation.x = event.clientX - mouseMoveOrigin.x
+        cameraTranslation.y = event.clientY - mouseMoveOrigin.y
     }
 })
 
@@ -121,9 +125,14 @@ canvasElement.addEventListener('mouseup', function (event) {
     isMoving = false
 })
 
+canvasElement.addEventListener('wheel', function (event) {
+    event.preventDefault()
+})
+
 canvasElement.addEventListener('dblclick', function (event) {
-    userTranslation.x = 0
-    userTranslation.y = 0
+    cameraTranslation.x = 0
+    cameraTranslation.y = 0
+    cameraTranslation.zoom = 1
 })
 
 document.getElementById('input-collisions').addEventListener('click', function (event) {
@@ -160,45 +169,45 @@ function randomInt(minOrMax, max) {
 const bodies = []
 
 // SEED: Random full screen
-// for (let index = 0; index < 500; index++) {
-//     bodies.push(new Body(
-//         new Vector(
-//             randomInt(0 / 4 * playground.width, 4 / 4 * playground.width),
-//             randomInt(0 / 4 * playground.height, 4 / 4 * playground.height),
-//         ),
-//         Vector.null(),
-//         Vector.null(),
-//         1e9,
-//     ))
-// }
-
-// SEED: Planet rings
-bodies.push(new Body(
-    new Vector(playground.width / 2, playground.height / 2),
-    Vector.null(),
-    Vector.null(),
-    1e12,
-))
-const dMax = 300, dMin = 20, mMax = 1 * 1e9, mMin = 1 * 1e9
-for (let index = 0; index < 499; index++) {
-    const tetha = Math.random() * 2 * Math.PI
-    const distance = Math.random() * (dMax - dMin) + dMin
-    const velocity = Math.sqrt((G * 1e12) / distance)
-    const mass = randomInt(mMin, mMax)
-
+for (let index = 0; index < 2000; index++) {
     bodies.push(new Body(
         new Vector(
-            Math.cos(tetha) * distance + playground.width / 2,
-            Math.sin(tetha) * distance + playground.height / 2,
-        ),
-        new Vector(
-            Math.cos(tetha - 0.5 * Math.PI) * velocity,
-            Math.sin(tetha - 0.5 * Math.PI) * velocity,
+            randomInt(0 / 4 * playground.width, 4 / 4 * playground.width),
+            randomInt(0 / 4 * playground.height, 4 / 4 * playground.height),
         ),
         Vector.null(),
-        mass,
+        Vector.null(),
+        1e9,
     ))
 }
+
+// SEED: Planet rings
+// bodies.push(new Body(
+//     new Vector(playground.width / 2, playground.height / 2),
+//     Vector.null(),
+//     Vector.null(),
+//     1e16,
+// ))
+// const dMax = 200, dMin = 100, mMax = 1 * 1e12, mMin = 1 * 1e12
+// for (let index = 0; index < 500; index++) {
+//     const tetha = Math.random() * 2 * Math.PI
+//     const distance = Math.random() * (dMax - dMin) + dMin
+//     const velocity = Math.sqrt((G * 1e16) / distance)
+//     const mass = randomInt(mMin, mMax)
+
+//     bodies.push(new Body(
+//         new Vector(
+//             Math.cos(tetha) * distance + playground.width / 2,
+//             Math.sin(tetha) * distance + playground.height / 2,
+//         ),
+//         new Vector(
+//             Math.cos(tetha - 0.5 * Math.PI) * velocity * 0.95,
+//             Math.sin(tetha - 0.5 * Math.PI) * velocity * 0.95,
+//         ),
+//         Vector.null(),
+//         mass,
+//     ))
+// }
 
 // SEED: Heterogeneous distribution
 // const numberOfCells = 4
@@ -357,7 +366,7 @@ function render() {
 
         // body
         ctx.beginPath()
-        ctx.arc(body.position.x + userTranslation.x, body.position.y + userTranslation.y, width, 0, 2 * Math.PI)
+        ctx.arc(scaleX(body.position.x), scaleY(body.position.y), scale(width), 0, 2 * Math.PI)
         ctx.fillStyle = 'white'
         // ctx.fillStyle = 'rgb(255, ' + (1 / body.mass * 255) + ', ' + (1 / body.mass * 255) + ' + '
         ctx.fill()
@@ -368,12 +377,12 @@ function render() {
             ctx.strokeStyle = 'red'
             ctx.beginPath()
             ctx.moveTo(
-                (body.position.x) + userTranslation.x,
-                (body.position.y) + userTranslation.y,
+                scaleX(body.position.x),
+                scaleY(body.position.y),
             )
             ctx.lineTo(
-                (body.position.x + body.speed.x * 1e0) + userTranslation.x,
-                (body.position.y + body.speed.y * 1e0) + userTranslation.y,
+                scaleX(body.position.x + body.speed.x * 1e0),
+                scaleY(body.position.y + body.speed.y * 1e0),
             )
             ctx.stroke()
             ctx.closePath()
@@ -384,12 +393,12 @@ function render() {
             ctx.strokeStyle = 'green'
             ctx.beginPath()
             ctx.moveTo(
-                (body.position.x) + userTranslation.x,
-                (body.position.y) + userTranslation.y,
+                scaleX(body.position.x),
+                scaleY(body.position.y),
             )
             ctx.lineTo(
-                (body.position.x + body.acceleration.x * 1e0) + userTranslation.x,
-                (body.position.y + body.acceleration.y * 1e0) + userTranslation.y,
+                scaleX(body.position.x + body.acceleration.x * 1e0),
+                scaleY(body.position.y + body.acceleration.y * 1e0),
             )
             ctx.stroke()
             ctx.closePath()
@@ -401,21 +410,21 @@ function render() {
         const barycenter_x_num = bodies.map(body => body.position.x * body.mass).reduce((sum, body) => sum + body, 0)
         const barycenter_x_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
         const barycenter_x = barycenter_x_num / barycenter_x_den
-    
+
         const barycenter_y_num = bodies.map(body => body.position.y * body.mass).reduce((sum, body) => sum + body, 0)
         const barycenter_y_den = bodies.map(body => body.mass).reduce((sum, body) => sum + body, 0)
         const barycenter_y = barycenter_y_num / barycenter_y_den
-    
+
         ctx.strokeStyle = 'blue'
         ctx.beginPath()
-        ctx.moveTo(barycenter_x + userTranslation.x, barycenter_y - 10 + userTranslation.y)
-        ctx.lineTo(barycenter_x + userTranslation.x, barycenter_y + 10 + userTranslation.y)
+        ctx.moveTo(scaleX(barycenter_x), scaleY(barycenter_y - 10))
+        ctx.lineTo(scaleX(barycenter_x), scaleY(barycenter_y + 10))
         ctx.stroke()
         ctx.closePath()
-    
+
         ctx.beginPath()
-        ctx.moveTo(barycenter_x - 10 + userTranslation.x, barycenter_y + userTranslation.y)
-        ctx.lineTo(barycenter_x + 10 + userTranslation.x, barycenter_y + userTranslation.y)
+        ctx.moveTo(scaleX(barycenter_x - 10), scaleY(barycenter_y))
+        ctx.lineTo(scaleX(barycenter_x + 10), scaleY(barycenter_y))
         ctx.stroke()
         ctx.closePath()
     }
@@ -431,4 +440,16 @@ function render() {
     ctx.fillStyle = 'rgba(255, 0, 0, 1)'
     ctx.fillText('' + lastDisplay.value + ' FPS', 5, 21)
     ctx.fillText('' + bodies.length + ' Bodies', 5, 42)
+}
+
+function scale(number) {
+    return number * cameraTranslation.zoom
+}
+
+function scaleX(number) {
+    return (number + cameraTranslation.x) * cameraTranslation.zoom
+}
+
+function scaleY(number) {
+    return (number + cameraTranslation.y) * cameraTranslation.zoom
 }
