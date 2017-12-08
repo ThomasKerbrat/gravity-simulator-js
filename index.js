@@ -3,9 +3,10 @@
  * TODO:
  * - Camera zoom
  * - Camera follow
+ * - Separation computation/replay
  */
 
-// ===== Classes ===== //
+// #region Classes
 
 class Vector {
     constructor(x, y) {
@@ -59,25 +60,27 @@ class Body {
 
     computeRadius() {
         // Compute the radius for a sphere from volume = mass
-        return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / (5 * 1e2)
+        return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / (1 * 1e4)
         // log10
         // return this._radius = Math.log10(this._mass) / 2
         // return this._radius = 2
     }
 }
 
+// #endregion Classes
 
 
-// ===== Global variables ====== //
+
+// #region Global variables
 
 const canvasElement = document.getElementById('canvas')
 const ctx = canvasElement.getContext('2d')
 
 const G = 6.674e-11
-const calculationsPerSeconds = 25
+const calculationsPerSeconds = 30
 
 const playground = {
-    width: 1200,
+    width: 1100,
     height: 700,
 }
 
@@ -101,10 +104,13 @@ const config = {
 }
 
 ctx.translate(0.5, 0.5)
+// ctx.scale(0.5, 0.5)
+
+// #endregion Global variables
 
 
 
-// ===== Event handlers ===== //
+// #region Event handlers
 
 canvasElement.addEventListener('mousedown', function (event) {
     isMoving = true
@@ -151,9 +157,11 @@ document.getElementById('button-barycenter').addEventListener('click', function 
     config.graphics.barycenter = event.target.checked
 })
 
+// #endregion Event handlers
 
 
-// ===== Initialization ===== //
+
+// #region Initialization
 
 function randomInt(minOrMax, max) {
     const number = Math.random()
@@ -169,45 +177,45 @@ function randomInt(minOrMax, max) {
 const bodies = []
 
 // SEED: Random full screen
-for (let index = 0; index < 2000; index++) {
-    bodies.push(new Body(
-        new Vector(
-            randomInt(0 / 4 * playground.width, 4 / 4 * playground.width),
-            randomInt(0 / 4 * playground.height, 4 / 4 * playground.height),
-        ),
-        Vector.null(),
-        Vector.null(),
-        1e9,
-    ))
-}
-
-// SEED: Planet rings
-// bodies.push(new Body(
-//     new Vector(playground.width / 2, playground.height / 2),
-//     Vector.null(),
-//     Vector.null(),
-//     1e16,
-// ))
-// const dMax = 200, dMin = 100, mMax = 1 * 1e12, mMin = 1 * 1e12
 // for (let index = 0; index < 500; index++) {
-//     const tetha = Math.random() * 2 * Math.PI
-//     const distance = Math.random() * (dMax - dMin) + dMin
-//     const velocity = Math.sqrt((G * 1e16) / distance)
-//     const mass = randomInt(mMin, mMax)
-
 //     bodies.push(new Body(
 //         new Vector(
-//             Math.cos(tetha) * distance + playground.width / 2,
-//             Math.sin(tetha) * distance + playground.height / 2,
-//         ),
-//         new Vector(
-//             Math.cos(tetha - 0.5 * Math.PI) * velocity * 0.95,
-//             Math.sin(tetha - 0.5 * Math.PI) * velocity * 0.95,
+//             randomInt(0 / 4 * playground.width, 4 / 4 * playground.width),
+//             randomInt(0 / 4 * playground.height, 4 / 4 * playground.height),
 //         ),
 //         Vector.null(),
-//         mass,
+//         Vector.null(),
+//         1e11,
 //     ))
 // }
+
+// SEED: Planet rings
+bodies.push(new Body(
+    new Vector(playground.width / 2, playground.height / 2),
+    Vector.null(),
+    Vector.null(),
+    1e16,
+))
+const dMax = 300, dMin = 100, mMax = 1 * 1e11, mMin = 1 * 1e12
+for (let index = 0; index < 800; index++) {
+    const tetha = Math.random() * 2 * Math.PI
+    const distance = Math.random() * (dMax - dMin) + dMin
+    const velocity = Math.sqrt((G * 1e16) / distance) / 1.02 * 1e0
+    const mass = randomInt(mMin, mMax)
+
+    bodies.push(new Body(
+        new Vector(
+            Math.cos(tetha) * distance + playground.width / 2,
+            Math.sin(tetha) * distance + playground.height / 2,
+        ),
+        new Vector(
+            Math.cos(tetha - 0.5 * Math.PI) * velocity * 0.95,
+            Math.sin(tetha - 0.5 * Math.PI) * velocity * 0.95,
+        ),
+        Vector.null(),
+        mass,
+    ))
+}
 
 // SEED: Heterogeneous distribution
 // const numberOfCells = 4
@@ -222,15 +230,17 @@ for (let index = 0; index < 2000; index++) {
 //                 ),
 //                 Vector.null(),
 //                 Vector.null(),
-//                 randomInt(1e8, 1e9),
+//                 randomInt(1e10, 1e11),
 //             ))
 //         }
 //     }
 // }
 
+// #endregion Initialization
 
 
-// ===== Computations ===== //
+
+// #region Computations
 
 setInterval(function tick() {
     let distances
@@ -453,3 +463,5 @@ function scaleX(number) {
 function scaleY(number) {
     return (number + cameraTranslation.y) * cameraTranslation.zoom
 }
+
+// #endregion Computations
