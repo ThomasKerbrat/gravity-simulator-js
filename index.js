@@ -100,17 +100,42 @@ const config = {
         velocity: false,
         acceleration: false,
         barycenter: false,
+        intervalID: null,
     }
 }
 
 ctx.translate(0.5, 0.5)
-// ctx.scale(0.5, 0.5)
 
 // #endregion Global variables
 
 
 
 // #region Event handlers
+
+document.getElementById('button-start').addEventListener('click', buttonStartEventHandler)
+document.getElementById('button-pause').addEventListener('click', buttonPauseEventHandler)
+document.getElementById('button-step').addEventListener('click', buttonStepEventHandler)
+document.getElementById('button-clear').addEventListener('click', buttonClearEventHandler)
+
+function buttonStartEventHandler(event) {
+    if (config.graphics.intervalID == null) {
+        config.graphics.intervalID = setInterval(tick, 1000 / calculationsPerSeconds)
+    }
+}
+
+function buttonPauseEventHandler(event) {
+    clearInterval(config.graphics.intervalID)
+    config.graphics.intervalID = null
+}
+
+function buttonStepEventHandler(event) {
+    tick()
+}
+
+function buttonClearEventHandler(event) {
+    buttonPauseEventHandler()
+    bodies = []
+}
 
 canvasElement.addEventListener('mousedown', function (event) {
     isMoving = true
@@ -132,7 +157,7 @@ canvasElement.addEventListener('mouseup', function (event) {
 })
 
 document.addEventListener('keydown', function (event) {
-    event.preventDefault()
+    // event.preventDefault()
 })
 
 canvasElement.addEventListener('dblclick', function (event) {
@@ -174,7 +199,7 @@ function randomInt(minOrMax, max) {
     }
 }
 
-const bodies = []
+let bodies = []
 
 // SEED: Random full screen
 // for (let index = 0; index < 1000; index++) {
@@ -196,11 +221,11 @@ bodies.push(new Body(
     Vector.null(),
     1e16,
 ))
-const dMax = 300, dMin = 50, mMax = 1 * 1e11, mMin = 1 * 1e12
-for (let index = 0; index < 800; index++) {
+const dMax = 400, dMin = 50, mMax = 1 * 1e11, mMin = 1 * 1e12
+for (let index = 0; index < 500; index++) {
     const tetha = Math.random() * 2 * Math.PI
     const distance = Math.random() * (dMax - dMin) + dMin
-    const velocity = Math.sqrt((G * 1e16) / distance) / 0.99 * 1e0
+    const velocity = Math.sqrt((G * 1e16) / distance) / 1.05 * 1e0
     const mass = randomInt(mMin, mMax)
 
     bodies.push(new Body(
@@ -242,7 +267,7 @@ for (let index = 0; index < 800; index++) {
 
 // #region Computations
 
-setInterval(function tick() {
+function tick() {
     let distances
 
     if (config.simulation.collisions) {
@@ -339,7 +364,7 @@ setInterval(function tick() {
         body.position.x += body.speed.x / calculationsPerSeconds
         body.position.y += body.speed.y / calculationsPerSeconds
     }
-}, 1000 / calculationsPerSeconds)
+}
 
 function computeDistances(bodies) {
     const distances = {}
