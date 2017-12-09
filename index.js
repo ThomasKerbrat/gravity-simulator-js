@@ -131,7 +131,7 @@ canvasElement.addEventListener('mouseup', function (event) {
     isMoving = false
 })
 
-canvasElement.addEventListener('wheel', function (event) {
+document.addEventListener('keydown', function (event) {
     event.preventDefault()
 })
 
@@ -177,7 +177,7 @@ function randomInt(minOrMax, max) {
 const bodies = []
 
 // SEED: Random full screen
-// for (let index = 0; index < 500; index++) {
+// for (let index = 0; index < 1000; index++) {
 //     bodies.push(new Body(
 //         new Vector(
 //             randomInt(0 / 4 * playground.width, 4 / 4 * playground.width),
@@ -185,7 +185,7 @@ const bodies = []
 //         ),
 //         Vector.null(),
 //         Vector.null(),
-//         1e11,
+//         5 * 1e11,
 //     ))
 // }
 
@@ -196,11 +196,11 @@ bodies.push(new Body(
     Vector.null(),
     1e16,
 ))
-const dMax = 300, dMin = 100, mMax = 1 * 1e11, mMin = 1 * 1e12
+const dMax = 300, dMin = 50, mMax = 1 * 1e11, mMin = 1 * 1e12
 for (let index = 0; index < 800; index++) {
     const tetha = Math.random() * 2 * Math.PI
     const distance = Math.random() * (dMax - dMin) + dMin
-    const velocity = Math.sqrt((G * 1e16) / distance) / 1.02 * 1e0
+    const velocity = Math.sqrt((G * 1e16) / distance) / 0.99 * 1e0
     const mass = randomInt(mMin, mMax)
 
     bodies.push(new Body(
@@ -252,35 +252,35 @@ setInterval(function tick() {
             const bodyA = bodies[i]
             for (let j = 0; j < bodies.length; j++) {
                 const bodyB = bodies[j]
-                if (i !== j && bodyA !== null && bodyB !== null) {
-                    const distance = i < j ? distances[j][i] : distances[i][j]
-                    if (distance < (bodyA.radius + bodyB.radius)) {
-                        // Weighted arithmetic mean, the heaviest body will proportionally conserve more of its properties.
-                        bodyA.position.x =
-                            (bodyA.position.x * bodyA.mass + bodyB.position.x * bodyB.mass) /
-                            (bodyA.mass + bodyB.mass)
-                        bodyA.position.y =
-                            (bodyA.position.y * bodyA.mass + bodyB.position.y * bodyB.mass) /
-                            (bodyA.mass + bodyB.mass)
+                if (i === j || bodyA === null || bodyB === null) { continue }
 
-                        bodyA.speed.x =
-                            (bodyA.speed.x * bodyA.mass + bodyB.speed.x * bodyB.mass) /
-                            (bodyA.mass + bodyB.mass)
-                        bodyA.speed.y =
-                            (bodyA.speed.y * bodyA.mass + bodyB.speed.y * bodyB.mass) /
-                            (bodyA.mass + bodyB.mass)
+                const distance = i < j ? distances[j][i] : distances[i][j]
+                if (distance >= (bodyA.radius + bodyB.radius)) { continue }
 
-                        bodyA.acceleration.x =
-                            (bodyA.acceleration.x * bodyA.mass + bodyB.acceleration.x * bodyB.mass) /
-                            (bodyA.mass + bodyB.mass)
-                        bodyA.acceleration.y =
-                            (bodyA.acceleration.y * bodyA.mass + bodyB.acceleration.y * bodyB.mass) /
-                            (bodyA.mass + bodyB.mass)
+                // Weighted arithmetic mean, the heaviest body will proportionally conserve more of its properties.
+                bodyA.position.x =
+                    (bodyA.position.x * bodyA.mass + bodyB.position.x * bodyB.mass) /
+                    (bodyA.mass + bodyB.mass)
+                bodyA.position.y =
+                    (bodyA.position.y * bodyA.mass + bodyB.position.y * bodyB.mass) /
+                    (bodyA.mass + bodyB.mass)
 
-                        bodyA.mass += bodyB.mass
-                        bodies[j] = null
-                    }
-                }
+                bodyA.speed.x =
+                    (bodyA.speed.x * bodyA.mass + bodyB.speed.x * bodyB.mass) /
+                    (bodyA.mass + bodyB.mass)
+                bodyA.speed.y =
+                    (bodyA.speed.y * bodyA.mass + bodyB.speed.y * bodyB.mass) /
+                    (bodyA.mass + bodyB.mass)
+
+                bodyA.acceleration.x =
+                    (bodyA.acceleration.x * bodyA.mass + bodyB.acceleration.x * bodyB.mass) /
+                    (bodyA.mass + bodyB.mass)
+                bodyA.acceleration.y =
+                    (bodyA.acceleration.y * bodyA.mass + bodyB.acceleration.y * bodyB.mass) /
+                    (bodyA.mass + bodyB.mass)
+
+                bodyA.mass += bodyB.mass
+                bodies[j] = null
             }
         }
 
@@ -351,6 +351,10 @@ function computeDistances(bodies) {
             distances[i][j] = Math.sqrt(
                 Math.pow(b.position.x - a.position.x, 2) + Math.pow(b.position.y - a.position.y, 2)
             )
+            // distances[i][j] = Math.max(
+            //     Math.abs(b.position.x - a.position.x),
+            //     Math.abs(b.position.y - a.position.y)
+            // )
         }
     }
     return distances
@@ -370,13 +374,19 @@ function render() {
     ctx.fillRect(0, 0, playground.width, playground.height)
 
     // Bodies
-    for (let body, width, index = 0; index < bodies.length; index++) {
-        body = bodies[index]
-        width = body.radius
+    for (let index = 0; index < bodies.length; index++) {
+        let body = bodies[index]
+        let width = body.radius
 
         // body
         ctx.beginPath()
         ctx.arc(scaleX(body.position.x), scaleY(body.position.y), scale(width), 0, 2 * Math.PI)
+        // ctx.rect(
+        //     scaleX(body.position.x) - body.radius / 2,
+        //     scaleY(body.position.y) - body.radius / 2,
+        //     body.radius,
+        //     body.radius,
+        // )
         ctx.fillStyle = 'white'
         // ctx.fillStyle = 'rgb(255, ' + (1 / body.mass * 255) + ', ' + (1 / body.mass * 255) + ' + '
         ctx.fill()
