@@ -10,33 +10,52 @@
                 border: 1px solid black;
                 background-color: black;
             }
+
             .gravity-simulator {
                 display: flex;
                 flex-direction: row;
             }
+
+            .gs-controls {
+                user-select: none;
+            }
+
         </style>
+
+        <script src="javascript/models/body.js"></script>
+        <script src="javascript/models/universe.js"></script>
+        <script src="javascript/models/vector.js"></script>
     </head>
     <body>
         <div class="gravity-simulator">
-            <canvas id="canvas" width="1100" height="700"></canvas>
-            <div>
-                <fieldset>
+            <canvas id="canvas" width="1600" height="900"></canvas>
+            <div class="gs-controls">
+                <fieldset id="input-group-controls" disabled>
                     <legend>Controls</legend>
                     <button id="button-start">Start</button>
                     <button id="button-pause">Pause</button>
                     <button id="button-step">Step</button>
                     <button id="button-clear">Clear</button>
                 </fieldset>
-                <fieldset>
+                <fieldset id="input-group-simulation-parameters">
                     <legend>Simulation Parameters</legend>
-                    <!-- <input type="number" id="input-tick-per-second">
-                    <label for="input-tick-per-second">Tick per second</label>
+                    <input type="radio" name="input-seed" id="input-seed-random">
+                    <label for="input-seed-random">Random</label>
                     <br>
-                    <input type="number" id="input-frame-per-second">
-                    <label for="input-frame-per-second">Frame per second</label>
-                    <br> -->
+                    <input type="radio" name="input-seed" id="input-seed-planet-rings" checked>
+                    <label for="input-seed-planet-rings">Planet Rings</label>
+                    <br>
+                    <input type="radio" name="input-seed" id="input-seed-heterogeneous-distribution">
+                    <label for="input-seed-heterogeneous-distribution">Heterogeneous Distribution</label>
+                    <br>
+                    <label for="input-body-number">Body number</label>
+                    <br>
+                    <input type="number" id="input-body-number" value="500">
+                    <br>
                     <input type="checkbox" id="input-collisions" checked>
                     <label for="input-collisions">Collisions</label>
+                    <br>
+                    <button id="button-seed">Seed</button>
                 </fieldset>
                 <fieldset>
                     <legend>Graphics</legend>
@@ -45,22 +64,11 @@
                     <br>
                     <input type="checkbox" id="button-acceleration-vector">
                     <label for="button-acceleration-vector">Acceleration vectors</label>
-                    <br>
-                    <input type="checkbox" id="button-barycenter">
-                    <label for="button-barycenter">Barycenter</label>
                 </fieldset>
                 <fieldset>
                     <legend>Mouse</legend>
                     <input type="radio" name="input-commands" id="input-move" checked="checked">
                     <label for="input-move">Move (double click goes to origin)</label>
-                    <!-- <br>
-                    <input type="radio" name="input-commands" id="input-insert-body">
-                    <label for="input-insert-body">Insert body</label> -->
-                </fieldset>
-                <fieldset>
-                    <legend>Camera</legend>
-                    <!-- <input type="radio" name="input-commands" id="input-move" checked="checked">
-                    <label for="input-move">Move (double click goes to origin)</label> -->
                     <!-- <br>
                     <input type="radio" name="input-commands" id="input-insert-body">
                     <label for="input-insert-body">Insert body</label> -->
