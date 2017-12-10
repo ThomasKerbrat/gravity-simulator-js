@@ -37,7 +37,7 @@ const config = {
     graphics: {
         velocity: false,
         acceleration: false,
-        barycenter: false,
+        barnesHutTree: false,
         intervalID: null,
     }
 };
@@ -66,6 +66,7 @@ document.getElementById('button-seed').addEventListener('click', buttonSeedEvent
 
 document.getElementById('button-velocity-vector').addEventListener('click', buttonVelocityVectorEventHandler);
 document.getElementById('button-acceleration-vector').addEventListener('click', buttonAccelerationVectorEventHandler);
+document.getElementById('button-barnes-hut-tree').addEventListener('click', buttonBarnesHutTreeEventHandler);
 
 
 
@@ -117,6 +118,7 @@ function buttonSeedEventHandler(event) {
         switch (inputSeedElement.id) {
             case 'input-seed-random': universe.bodies = seedRandom(inputBodyNumber); break;
             case 'input-seed-planet-rings': universe.bodies = seedPlanetRings(inputBodyNumber); break;
+            case 'input-seed-star-system': universe.bodies = seedStarSystem(inputBodyNumber); break;
             case 'input-seed-heterogeneous-distribution': universe.bodies = seedHeterogeneousDistribution(inputBodyNumber); break;
             default: throw new Error('Unexpected input-seed element id: ' + inputSeedElement.id); break;
         }
@@ -136,6 +138,10 @@ function buttonVelocityVectorEventHandler(event) {
 
 function buttonAccelerationVectorEventHandler(event) {
     config.graphics.acceleration = event.target.checked;
+}
+
+function buttonBarnesHutTreeEventHandler(event) {
+    config.graphics.barnesHutTree = event.target.checked;
 }
 
 
@@ -209,8 +215,8 @@ function seedRandom(bodyNumber) {
     for (let index = 0; index < bodyNumber; index++) {
         bodies.push(new Body(
             new Vector(
-                randomInt(-1 / 2 * playground.width, 1 / 2 * playground.width),
-                randomInt(-1 / 2 * playground.height, 1 / 2 * playground.height),
+                randomInt(-1.5 * playground.width, 1.5 * playground.width),
+                randomInt(-1.5 * playground.height, 1.5 * playground.height),
             ),
             Vector.null(),
             Vector.null(),
@@ -241,6 +247,45 @@ function seedPlanetRings(bodyNumber) {
         const distance = Math.random() * (dMax - dMin) + dMin;
         const velocity = Math.sqrt((G * 1e16) / distance) * 0.95e0;
         const mass = randomInt(mMin, mMax);
+
+        bodies.push(new Body(
+            new Vector(
+                Math.cos(tetha) * distance,
+                Math.sin(tetha) * distance,
+            ),
+            new Vector(
+                Math.cos(tetha - 0.5 * Math.PI) * velocity,
+                Math.sin(tetha - 0.5 * Math.PI) * velocity,
+            ),
+            Vector.null(),
+            mass,
+        ));
+    }
+
+    return bodies;
+}
+
+function seedStarSystem(bodyNumber) {
+    const bodies = [];
+    if (bodyNumber > 10) {
+        bodyNumber = 10;
+    }
+
+    bodies.push(new Body(
+        new Vector(0, 0),
+        Vector.null(),
+        Vector.null(),
+        1e16,
+    ));
+
+    const dMax = 400;
+    const dMin = 100;
+
+    for (let index = 0; index < (bodyNumber - 1); index++) {
+        const tetha = 0; // Math.random() * 2 * Math.PI;
+        const distance = ((index + 1) / bodyNumber) * (dMax - dMin) + dMin;
+        const velocity = Math.sqrt((G * 1e16) / distance) * 1e0;
+        const mass = 1e12;
 
         bodies.push(new Body(
             new Vector(
@@ -357,6 +402,11 @@ function render() {
         }
     }
 
+    // Nodes
+    if (config.graphics.barnesHutTree && universe.node != null) {
+        renderNode(universe.node);
+    }
+
     // FPS
     if (Date.now() - lastDisplay.time > 1000) {
         lastDisplay.time = Date.now()
@@ -368,6 +418,43 @@ function render() {
     ctx.fillStyle = 'rgba(255, 0, 0, 1)'
     ctx.fillText('' + lastDisplay.value + ' FPS', 5, 21)
     ctx.fillText('' + universe.bodies.length + ' Bodies', 5, 42)
+}
+
+function renderNode(node) {
+    // Box
+    ctx.strokeStyle = '#040';
+    ctx.strokeRect(scaleX(node.origin.x), scaleY(node.origin.y), scale(node.width), scale(node.width));
+
+    // Center of mass
+    if (node.child == null && node.children != null) {
+        ctx.beginPath()
+        ctx.arc(scaleX(node.centerOfMass.x), scaleY(node.centerOfMass.y), scale(2), 0, 2 * Math.PI)
+        ctx.fillStyle = '#08f'
+        ctx.fill()
+        ctx.closePath()
+    }
+
+    // Children (recursive)
+    if (node.children != null) {
+        for (const subNode of node.children) {
+            if (subNode.child != null || subNode.children != null) {
+                renderNode(subNode);
+
+                ctx.strokeStyle = subNode.child == null ? '#048' : '#084';
+                ctx.beginPath();
+                ctx.moveTo(
+                    scaleX(node.centerOfMass.x),
+                    scaleY(node.centerOfMass.y),
+                );
+                ctx.lineTo(
+                    scaleX(subNode.centerOfMass.x),
+                    scaleY(subNode.centerOfMass.y),
+                );
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
+    }
 }
 
 function scale(number) {

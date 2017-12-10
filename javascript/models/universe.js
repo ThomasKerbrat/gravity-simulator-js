@@ -9,15 +9,19 @@ class Universe {
         this._computationsPerSecond = computationsPerSecond;
         this._gravitationalConstant = gravitationalConstant;
         this._enableCollisions = enableCollisions;
+        this.theta = 0.25;
         this.bodies = [];
+        this.node = null;
     }
 
     tick() {
-        const forces = Universe.computeForces(this.bodies, this._gravitationalConstant);
-        Universe.shiftBodies(this.bodies, forces);
         if (this._enableCollisions) {
             Universe.resolveCollisions(this.bodies);
         }
+
+        // const forces = Universe.computeForces(this.bodies, this._gravitationalConstant);
+        const forces = this.computeForcesBarnesHut(this.bodies, this._gravitationalConstant, this.theta);
+        Universe.shiftBodies(this.bodies, forces);
     }
 
     static shiftBodies(bodies, forces) {
@@ -90,13 +94,18 @@ class Universe {
             distances[i] = [];
             for (let j = i + 1; j < bodies.length; j++) {
                 let b = bodies[j];
-                distances[i][j] = Math.sqrt(
-                    Math.pow(b.position.x - a.position.x, 2) + Math.pow(b.position.y - a.position.y, 2)
-                );
+                distances[i][j] = Universe.distance(a.position, b.position);
+                if (Number.isNaN(distances[i][j])) {
+                    debugger;
+                }
             }
         }
 
         return distances;
+    }
+
+    static distance(a, b) {
+        return Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
     }
 
     static computeForces(bodies, G) {
@@ -128,6 +137,41 @@ class Universe {
                 forcesOnB.x += Math.cos(angle) * force;
                 forcesOnB.y += Math.sin(angle) * force;
             }
+        }
+
+        return forces;
+    }
+
+    computeForcesBarnesHut(bodies, G, theta) {
+        let minX = +Infinity;
+        let maxX = -Infinity;
+        let minY = +Infinity;
+        let maxY = -Infinity;
+
+        for (const body of bodies) {
+            if (body.position.x < minX) { minX = body.position.x; }
+            if (body.position.x > maxX) { maxX = body.position.x; }
+            if (body.position.y < minY) { minY = body.position.y; }
+            if (body.position.y > maxY) { maxY = body.position.y; }
+        }
+
+        const margin = 5e1;
+        const deltaX = Math.abs(maxX - minX);
+        const deltaY = Math.abs(maxY - minY);
+        let maxDelta = Math.max(deltaX, deltaY);
+
+        minX = Math.floor(minX - (maxDelta - deltaX) / 2) - 0.5 * margin;
+        minY = Math.floor(minY - (maxDelta - deltaY) / 2) - 0.5 * margin;
+        maxDelta = Math.ceil(Math.max(deltaX, deltaY)) + margin;
+
+        this.node = new QuadNode(new Vector(minX, minY), maxDelta);
+        for (const body of bodies) {
+            this.node.add(body);
+        }
+
+        const forces = [];
+        for (const body of bodies) {
+            forces.push(this.node.getForceFor(body, theta));
         }
 
         return forces;

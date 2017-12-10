@@ -23,6 +23,7 @@
         </style>
 
         <script src="javascript/models/body.js"></script>
+        <script src="javascript/models/quad-node.js"></script>
         <script src="javascript/models/universe.js"></script>
         <script src="javascript/models/vector.js"></script>
     </head>
@@ -45,6 +46,9 @@
                     <input type="radio" name="input-seed" id="input-seed-planet-rings" checked>
                     <label for="input-seed-planet-rings">Planet Rings</label>
                     <br>
+                    <input type="radio" name="input-seed" id="input-seed-star-system">
+                    <label for="input-seed-star-system">Star System</label>
+                    <br>
                     <input type="radio" name="input-seed" id="input-seed-heterogeneous-distribution">
                     <label for="input-seed-heterogeneous-distribution">Heterogeneous Distribution</label>
                     <br>
@@ -64,6 +68,9 @@
                     <br>
                     <input type="checkbox" id="button-acceleration-vector">
                     <label for="button-acceleration-vector">Acceleration vectors</label>
+                    <br>
+                    <input type="checkbox" id="button-barnes-hut-tree">
+                    <label for="button-barnes-hut-tree">Barnes-Hut Tree</label>
                 </fieldset>
                 <fieldset>
                     <legend>Mouse</legend>
