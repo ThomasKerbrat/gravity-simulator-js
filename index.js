@@ -27,7 +27,7 @@ let mouseMoveOrigin = null;
 let cameraTranslation = {
     x: playground.width / 2,
     y: playground.height / 2,
-    zoom: 0.9,
+    zoom: 1,
 };
 
 const config = {
@@ -245,20 +245,22 @@ function seedPlanetRings(bodyNumber) {
         new Vector(0, 0),
         Vector.null(),
         Vector.null(),
-        1e16,
+        1e17,
     ));
 
-    seedRing(1 / 6 * bodyNumber, 2e2, 2e2 + 5e1, 1e8, 1e10);
-    seedRing(2 / 6 * bodyNumber, 3e2, 3e2 + 5e1, 1e8, 1e10);
-    seedRing(3 / 6 * bodyNumber, 4e2, 4e2 + 5e1, 1e8, 1e10);
+    // seedRing(1 / 6 * bodyNumber, 2e2, 2e2 + 5e1, 1e8, 1e10);
+    // seedRing(2 / 6 * bodyNumber, 3e2, 3e2 + 5e1, 1e8, 1e10);
+    // seedRing(3 / 6 * bodyNumber, 4e2, 4e2 + 5e1, 1e8, 1e10);
 
+    seedRing(bodyNumber, 2e2, 4e2, 1e12, 1e12);
+    
     // seedRing(bodyNumber, 5e2, 1e3, 1e10, 1e11);
 
     function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
         for (let index = 0; index < (bodyNumber - 1); index++) {
             const tetha = Math.random() * 2 * Math.PI;
             const distance = Math.random() * (dMax - dMin) + dMin;
-            const velocity = Math.sqrt((G * 1e16) / distance) * 0.99e0;
+            const velocity = Math.sqrt((G * 1e17) / distance) * 0.99e0;
             const mass = randomInt(mMin, mMax);
 
             bodies.push(new Body(
@@ -345,8 +347,10 @@ function seedHeterogeneousDistribution(bodyNumber) {
 function seedTwoClouds(bodyNumber) {
     const bodies = [];
 
-    seedCloud(bodyNumber / 2, -500, 0, 250);
-    seedCloud(bodyNumber / 2, 500, 0, 250);
+    seedCloud(bodyNumber / 4, -500, -500, 250);
+    seedCloud(bodyNumber / 4, -500, 500, 250);
+    seedCloud(bodyNumber / 4, 500, -500, 250);
+    seedCloud(bodyNumber / 4, 500, 500, 250);
 
     return bodies;
 
@@ -362,7 +366,7 @@ function seedTwoClouds(bodyNumber) {
                 ),
                 Vector.null(),
                 Vector.null(),
-                1e9,
+                1e12,
             ));
         }
     }
@@ -400,7 +404,11 @@ function render() {
 
     // Bodies
     for (const body of universe.bodies) {
-        let screenRadius = scale(body.radius) < 0.5 ? 0.5 : scale(body.radius)
+        const minimumRadius = 0.25;
+        let screenRadius = scale(body.radius);
+        if (screenRadius < minimumRadius) {
+            screenRadius = minimumRadius;
+        }
 
         // body
         ctx.beginPath()
@@ -468,7 +476,7 @@ function renderNode(node) {
     // Center of mass
     if (node.child == null && node.children != null) {
         ctx.beginPath()
-        ctx.arc(scaleX(node.centerOfMass.x), scaleY(node.centerOfMass.y), scale(2), 0, 2 * Math.PI)
+        ctx.arc(scaleX(node.centerOfMass.x), scaleY(node.centerOfMass.y), 1, 0, 2 * Math.PI)
         ctx.fillStyle = '#08f'
         ctx.fill()
         ctx.closePath()
