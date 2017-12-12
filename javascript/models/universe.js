@@ -20,8 +20,8 @@ class Universe {
             Universe.resolveCollisions(this.bodies);
         }
 
-        // const forces = Universe.computeForces(this.bodies, this._gravitationalConstant);
-        const forces = this.computeForcesBarnesHut(this.bodies, this._gravitationalConstant, this.theta);
+        const forces = Universe.computeForces(this.bodies, this._gravitationalConstant);
+        // const forces = this.computeForcesBarnesHut(this.bodies, this._gravitationalConstant, this.theta);
         Universe.shiftBodies(this.bodies, forces);
     }
 
