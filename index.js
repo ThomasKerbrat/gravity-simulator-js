@@ -120,6 +120,7 @@ function buttonSeedEventHandler(event) {
             case 'input-seed-planet-rings': universe.bodies = seedPlanetRings(inputBodyNumber); break;
             case 'input-seed-star-system': universe.bodies = seedStarSystem(inputBodyNumber); break;
             case 'input-seed-heterogeneous-distribution': universe.bodies = seedHeterogeneousDistribution(inputBodyNumber); break;
+            case 'input-seed-two-clouds': universe.bodies = seedTwoClouds(inputBodyNumber); break;
             default: throw new Error('Unexpected input-seed element id: ' + inputSeedElement.id); break;
         }
 
@@ -212,12 +213,12 @@ function seedRandom(bodyNumber) {
     for (let index = 0; index < bodyNumber; index++) {
         bodies.push(new Body(
             new Vector(
-                randomInt(-1.5 * playground.width, 1.5 * playground.width),
-                randomInt(-1.5 * playground.height, 1.5 * playground.height),
+                randomInt(-0.5 * playground.width, 0.5 * playground.width),
+                randomInt(-0.5 * playground.height, 0.5 * playground.height),
             ),
             Vector.null(),
             Vector.null(),
-            5 * 1e11,
+            5e9,
         ));
     }
 
@@ -234,29 +235,30 @@ function seedPlanetRings(bodyNumber) {
         1e16,
     ));
 
-    const dMax = 400;
-    const dMin = 100;
-    const mMax = 1 * 1e11;
-    const mMin = 1 * 1e12;
+    seedRing(bodyNumber / 3, 400, 500, 1e8, 1e10);
+    seedRing(bodyNumber / 3, 800, 900, 1e8, 1e10);
+    seedRing(bodyNumber / 3, 1200, 1300, 1e8, 1e10);
 
-    for (let index = 0; index < (bodyNumber - 1); index++) {
-        const tetha = Math.random() * 2 * Math.PI;
-        const distance = Math.random() * (dMax - dMin) + dMin;
-        const velocity = Math.sqrt((G * 1e16) / distance) * 0.95e0;
-        const mass = randomInt(mMin, mMax);
+    function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
+        for (let index = 0; index < (bodyNumber - 1); index++) {
+            const tetha = Math.random() * 2 * Math.PI;
+            const distance = Math.random() * (dMax - dMin) + dMin;
+            const velocity = Math.sqrt((G * 1e16) / distance) * 0.99e0;
+            const mass = randomInt(mMin, mMax);
 
-        bodies.push(new Body(
-            new Vector(
-                Math.cos(tetha) * distance,
-                Math.sin(tetha) * distance,
-            ),
-            new Vector(
-                Math.cos(tetha - 0.5 * Math.PI) * velocity,
-                Math.sin(tetha - 0.5 * Math.PI) * velocity,
-            ),
-            Vector.null(),
-            mass,
-        ));
+            bodies.push(new Body(
+                new Vector(
+                    Math.cos(tetha) * distance,
+                    Math.sin(tetha) * distance,
+                ),
+                new Vector(
+                    Math.cos(tetha - 0.5 * Math.PI) * velocity,
+                    Math.sin(tetha - 0.5 * Math.PI) * velocity,
+                ),
+                Vector.null(),
+                mass,
+            ));
+        }
     }
 
     return bodies;
@@ -325,6 +327,32 @@ function seedHeterogeneousDistribution(bodyNumber) {
     return bodies;
 }
 
+function seedTwoClouds(bodyNumber) {
+    const bodies = [];
+
+    seedCloud(bodyNumber / 2, -1000, 0, 250);
+    seedCloud(bodyNumber / 2, 1000, 0, 250);
+
+    return bodies;
+
+    function seedCloud(bodyNumber, centerX, centerY, radius) {
+        for (let i = 0; i < bodyNumber; i++) {
+            const theta = Math.random() * 2 * Math.PI;
+            const distance = Math.random() * radius;
+            
+            bodies.push(new Body(
+                new Vector(
+                    Math.cos(theta) * distance + centerX,
+                    Math.sin(theta) * distance + centerY,
+                ),
+                Vector.null(),
+                Vector.null(),
+                1e9,
+            ));
+        }
+    }
+}
+
 function randomInt(minOrMax, max) {
     const number = Math.random()
     if (arguments.length === 1) {
@@ -357,11 +385,11 @@ function render() {
 
     // Bodies
     for (const body of universe.bodies) {
-        let width = body.radius
+        let screenRadius = scale(body.radius) < 0.5 ? 0.5 : scale(body.radius)
 
         // body
         ctx.beginPath()
-        ctx.arc(scaleX(body.position.x), scaleY(body.position.y), scale(width), 0, 2 * Math.PI)
+        ctx.arc(scaleX(body.position.x), scaleY(body.position.y), screenRadius, 0, 2 * Math.PI)
         ctx.fillStyle = 'white'
         ctx.fill()
         ctx.closePath()
