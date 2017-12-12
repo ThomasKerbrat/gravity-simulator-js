@@ -174,19 +174,16 @@ canvasElement.addEventListener('dblclick', function (event) {
     event.preventDefault();
 })
 
-// TODO
-// canvasElement.addEventListener('wheel', function (event) {
-//     const newZoom = cameraTranslation.zoom * (event.deltaY > 0 ? 0.95 : 1.05);
-//     const deltaZoom = cameraTranslation.zoom - newZoom;
-//     const x = (event.clientX - cameraTranslation.x) * (1 / cameraTranslation.zoom);
-//     const y = (event.clientY - cameraTranslation.y) * (1 / cameraTranslation.zoom);
-//     cameraTranslation.x += (cameraTranslation.x * cameraTranslation.zoom) - (cameraTranslation.x * newZoom);
-//     cameraTranslation.y += (cameraTranslation.y * cameraTranslation.zoom) - (cameraTranslation.y * newZoom);
-//     cameraTranslation.zoom = newZoom;
-//     event.preventDefault();
-
-//     console.log(x, y);
-// })
+canvasElement.addEventListener('wheel', function (event) {
+    // NOTE: I do not understand why this works.
+    const newZoom = cameraTranslation.zoom * (event.deltaY > 0 ? 0.9 : 1.1);
+    const x = (cameraTranslation.x - event.clientX) / cameraTranslation.zoom;
+    const y = (cameraTranslation.y - event.clientY) / cameraTranslation.zoom;
+    cameraTranslation.x = (x * newZoom) + event.clientX;
+    cameraTranslation.y = (y * newZoom) + event.clientY;
+    cameraTranslation.zoom = newZoom;
+    event.preventDefault();
+})
 
 // #endregion
 
