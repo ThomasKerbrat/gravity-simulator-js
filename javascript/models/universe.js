@@ -5,11 +5,12 @@ class Universe {
         computationsPerSecond,
         gravitationalConstant,
         enableCollisions,
+        theta,
     }) {
         this._computationsPerSecond = computationsPerSecond;
         this._gravitationalConstant = gravitationalConstant;
         this._enableCollisions = enableCollisions;
-        this.theta = 0.25;
+        this.theta = theta;
         this.bodies = [];
         this.node = null;
     }

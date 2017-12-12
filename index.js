@@ -27,7 +27,7 @@ let mouseMoveOrigin = null;
 let cameraTranslation = {
     x: playground.width / 2,
     y: playground.height / 2,
-    zoom: 1,
+    zoom: 0.9,
 };
 
 const config = {
@@ -106,6 +106,7 @@ function inputCollisionsEventHandler(event) {
 function buttonSeedEventHandler(event) {
     const inputSeedElement = Array.apply(null, document.querySelectorAll('input[name=input-seed]')).filter(element => element.checked)[0];
     const inputBodyNumber = parseInt(document.getElementById('input-body-number').value);
+    const inputTheta = parseFloat(document.getElementById('input-theta').value);
     const inputCollisions = document.getElementById('input-collisions').checked;
 
     if (inputSeedElement != null && !Number.isNaN(inputBodyNumber)) {
@@ -113,6 +114,7 @@ function buttonSeedEventHandler(event) {
             computationsPerSecond: calculationsPerSeconds,
             gravitationalConstant: G,
             enableCollisions: inputCollisions,
+            theta: inputTheta,
         });
 
         switch (inputSeedElement.id) {
