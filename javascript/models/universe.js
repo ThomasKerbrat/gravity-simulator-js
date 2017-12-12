@@ -45,7 +45,7 @@ class Universe {
 
         for (let i = 0; i < bodies.length; i++) {
             const bodyA = bodies[i];
-            for (let j = 0; j < bodies.length; j++) {
+            for (let j = i + 1; j < bodies.length; j++) {
                 const bodyB = bodies[j];
                 if (i === j || bodyA === null || bodyB === null) { continue; }
 
