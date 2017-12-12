@@ -18,8 +18,8 @@ const calculationsPerSeconds = 30;
 
 let universe = null;
 const playground = {
-    width: 1600,
-    height: 900,
+    width: 800,
+    height: 800,
 };
 
 let isMoving = false;
