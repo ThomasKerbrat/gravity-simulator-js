@@ -229,7 +229,7 @@ function seedRandom(bodyNumber) {
             ),
             Vector.null(),
             Vector.null(),
-            1e10,
+            1e11,
         ));
     }
 
@@ -343,8 +343,8 @@ function seedHeterogeneousDistribution(bodyNumber) {
 function seedTwoClouds(bodyNumber) {
     const bodies = [];
 
-    seedCloud(bodyNumber / 2, -1000, 0, 250);
-    seedCloud(bodyNumber / 2, 1000, 0, 250);
+    seedCloud(bodyNumber / 2, -500, 0, 250);
+    seedCloud(bodyNumber / 2, 500, 0, 250);
 
     return bodies;
 
