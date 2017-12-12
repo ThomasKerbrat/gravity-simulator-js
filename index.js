@@ -176,12 +176,23 @@ canvasElement.addEventListener('dblclick', function (event) {
 })
 
 canvasElement.addEventListener('wheel', function (event) {
+    let fixedX;
+    let fixedY;
+
+    if (event.altKey) {
+        fixedX = playground.width / 2;
+        fixedY = playground.height / 2;
+    } else {
+        fixedX = event.clientX;
+        fixedY = event.clientY;
+    }
+
     // NOTE: I do not understand why this works.
     const newZoom = cameraTranslation.zoom * (event.deltaY > 0 ? 0.9 : 1.1);
-    const x = (cameraTranslation.x - event.clientX) / cameraTranslation.zoom;
-    const y = (cameraTranslation.y - event.clientY) / cameraTranslation.zoom;
-    cameraTranslation.x = (x * newZoom) + event.clientX;
-    cameraTranslation.y = (y * newZoom) + event.clientY;
+    const x = (cameraTranslation.x - fixedX) / cameraTranslation.zoom;
+    const y = (cameraTranslation.y - fixedY) / cameraTranslation.zoom;
+    cameraTranslation.x = (x * newZoom) + fixedX;
+    cameraTranslation.y = (y * newZoom) + fixedY;
     cameraTranslation.zoom = newZoom;
     event.preventDefault();
 })
@@ -218,7 +229,7 @@ function seedRandom(bodyNumber) {
             ),
             Vector.null(),
             Vector.null(),
-            5e9,
+            1e10,
         ));
     }
 
@@ -235,9 +246,11 @@ function seedPlanetRings(bodyNumber) {
         1e16,
     ));
 
-    seedRing(bodyNumber / 3, 400, 500, 1e8, 1e10);
-    seedRing(bodyNumber / 3, 800, 900, 1e8, 1e10);
-    seedRing(bodyNumber / 3, 1200, 1300, 1e8, 1e10);
+    seedRing(1 / 6 * bodyNumber, 2e2, 2e2 + 5e1, 1e8, 1e10);
+    seedRing(2 / 6 * bodyNumber, 3e2, 3e2 + 5e1, 1e8, 1e10);
+    seedRing(3 / 6 * bodyNumber, 4e2, 4e2 + 5e1, 1e8, 1e10);
+
+    // seedRing(bodyNumber, 5e2, 1e3, 1e10, 1e11);
 
     function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
         for (let index = 0; index < (bodyNumber - 1); index++) {
@@ -339,7 +352,7 @@ function seedTwoClouds(bodyNumber) {
         for (let i = 0; i < bodyNumber; i++) {
             const theta = Math.random() * 2 * Math.PI;
             const distance = Math.random() * radius;
-            
+
             bodies.push(new Body(
                 new Vector(
                     Math.cos(theta) * distance + centerX,
