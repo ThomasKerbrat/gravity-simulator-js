@@ -231,7 +231,7 @@ function seedRandom(bodyNumber) {
             ),
             Vector.null(),
             Vector.null(),
-            1e11,
+            randomInt(1e10, 1e11),
         ));
     }
 
@@ -248,7 +248,7 @@ function seedPlanetRings(bodyNumber) {
         1e16,
     ));
 
-    seedRing(bodyNumber, 2e2, 4e2, 1e11, 1e12);
+    seedRing(bodyNumber, 2e2, 4e2, 1e10, 1e11);
 
     function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
         for (let index = 0; index < (bodyNumber - 1); index++) {
@@ -329,7 +329,7 @@ function seedHeterogeneousDistribution(bodyNumber) {
                     ),
                     Vector.null(),
                     Vector.null(),
-                    randomInt(1e11, 1e12),
+                    randomInt(1e10, 1e11),
                 ));
             }
         }
@@ -360,7 +360,7 @@ function seedTwoClouds(bodyNumber) {
                 ),
                 Vector.null(),
                 Vector.null(),
-                1e12,
+                randomInt(1e10, 1e11),
             ));
         }
     }
