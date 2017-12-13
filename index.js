@@ -245,22 +245,16 @@ function seedPlanetRings(bodyNumber) {
         new Vector(0, 0),
         Vector.null(),
         Vector.null(),
-        1e17,
+        1e16,
     ));
 
-    // seedRing(1 / 6 * bodyNumber, 2e2, 2e2 + 5e1, 1e8, 1e10);
-    // seedRing(2 / 6 * bodyNumber, 3e2, 3e2 + 5e1, 1e8, 1e10);
-    // seedRing(3 / 6 * bodyNumber, 4e2, 4e2 + 5e1, 1e8, 1e10);
-
-    seedRing(bodyNumber, 2e2, 4e2, 1e12, 1e12);
-    
-    // seedRing(bodyNumber, 5e2, 1e3, 1e10, 1e11);
+    seedRing(bodyNumber, 2e2, 4e2, 1e11, 1e12);
 
     function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
         for (let index = 0; index < (bodyNumber - 1); index++) {
             const tetha = Math.random() * 2 * Math.PI;
             const distance = Math.random() * (dMax - dMin) + dMin;
-            const velocity = Math.sqrt((G * 1e17) / distance) * 0.99e0;
+            const velocity = Math.sqrt((G * 1e16) / distance) * 0.99e0;
             const mass = randomInt(mMin, mMax);
 
             bodies.push(new Body(
