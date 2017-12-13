@@ -12,7 +12,7 @@ class Universe {
         this._enableCollisions = enableCollisions;
         this.theta = theta;
         this.bodies = [];
-        this.node = null;
+        this.tree = null;
     }
 
     tick() {
@@ -165,14 +165,14 @@ class Universe {
         minY = Math.floor(minY - (maxDelta - deltaY) / 2) - 0.5 * margin;
         maxDelta = Math.ceil(Math.max(deltaX, deltaY)) + margin;
 
-        this.node = new QuadNode(new Vector(minX, minY), maxDelta);
+        this.tree = new QuadTree(new Vector(minX, minY), maxDelta);
         for (const body of bodies) {
-            this.node.add(body);
+            this.tree.add(body);
         }
 
         const forces = [];
         for (const body of bodies) {
-            forces.push(this.node.getForceFor(body, theta));
+            forces.push(this.tree.getForceFor(body, theta));
         }
 
         return forces;

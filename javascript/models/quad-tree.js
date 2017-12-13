@@ -1,10 +1,10 @@
 
-class QuadNode {
+class QuadTree {
 
     constructor(origin, width) {
         this.origin = origin;
         this.width = width;
-        this.children = null;
+        this.nodes = null;
         this.child = null;
         this._totalMass = null;
         this._centerOfMass = null;
@@ -15,13 +15,13 @@ class QuadNode {
             return this._totalMass;
         }
 
-        if (this.child == null && this.children == null) {
+        if (this.child == null && this.nodes == null) {
             this._totalMass = 0;
         } else if (this.child != null) {
             this._totalMass = this.child.mass;
-        } else if (this.children != null) {
+        } else if (this.nodes != null) {
             this._totalMass = 0;
-            for (const node of this.children) {
+            for (const node of this.nodes) {
                 this._totalMass += node.totalMass;
             }
         } else {
@@ -38,10 +38,10 @@ class QuadNode {
 
         if (this.child != null) {
             this._centerOfMass = this.child.position;
-        } else if (this.children != null) {
+        } else if (this.nodes != null) {
             const nodes = [];
 
-            for (const node of this.children) {
+            for (const node of this.nodes) {
                 if (node.centerOfMass != null) {
                     nodes.push(node);
                 }
@@ -64,7 +64,7 @@ class QuadNode {
     }
 
     get isEmpty() {
-        return this.children == null && this.child == null;
+        return this.nodes == null && this.child == null;
     }
 
     add(child) {
@@ -75,14 +75,14 @@ class QuadNode {
         }
 
         // Body already present, must divide.
-        if (this.children == null && this.child != null) {
+        if (this.nodes == null && this.child != null) {
             const halfWidth = this.width / 2;
 
-            this.children = [
-                new QuadNode(new Vector(this.origin.x, this.origin.y), halfWidth),
-                new QuadNode(new Vector(this.origin.x + halfWidth, this.origin.y), halfWidth),
-                new QuadNode(new Vector(this.origin.x, this.origin.y + halfWidth), halfWidth),
-                new QuadNode(new Vector(this.origin.x + halfWidth, this.origin.y + halfWidth), halfWidth),
+            this.nodes = [
+                new QuadTree(new Vector(this.origin.x, this.origin.y), halfWidth),
+                new QuadTree(new Vector(this.origin.x + halfWidth, this.origin.y), halfWidth),
+                new QuadTree(new Vector(this.origin.x, this.origin.y + halfWidth), halfWidth),
+                new QuadTree(new Vector(this.origin.x + halfWidth, this.origin.y + halfWidth), halfWidth),
             ];
 
             // Add current pending child, then the new one.
@@ -93,8 +93,8 @@ class QuadNode {
         }
 
         // Internal node, must route.
-        if (this.children != null && this.child == null) {
-            for (const _children of this.children) {
+        if (this.nodes != null && this.child == null) {
+            for (const _children of this.nodes) {
                 if (
                     child.position.x >= _children.origin.x && child.position.x < _children.origin.x + _children.width
                     && child.position.y >= _children.origin.y && child.position.y < _children.origin.y + _children.width
@@ -125,7 +125,7 @@ class QuadNode {
     }
 
     _getVirtualBodies(body, theta) {
-        if (this.child != null && this.children == null) {
+        if (this.child != null && this.nodes == null) {
             return [{
                 position: this.child.position,
                 mass: this.child.mass,
@@ -135,7 +135,7 @@ class QuadNode {
 
         const virtualBodies = [];
 
-        for (const child of this.children) {
+        for (const child of this.nodes) {
             if (child.isEmpty) { continue; }
             if (child.child === body) { continue; }
 
