@@ -67,17 +67,34 @@ class QuadTree {
         return this.nodes == null && this.child == null;
     }
 
-    add(child) {
+    /**
+     * @param {*} child 
+     * @param {*} enableCollisions 
+     * @return {boolean} Returns if the child being added collided width a body already present in the tree.
+     */
+    add(child, enableCollisions) {
         // Pristine, set only and first child.
         if (this.isEmpty) {
             this.child = child;
-            return;
+            return null;
         }
 
         // Body already present, must divide.
         if (this.nodes == null && this.child != null) {
-            const halfWidth = this.width / 2;
 
+            // TODO: Verify if there is a collision.
+            if (enableCollisions) {
+                // const distanceX = Math.abs((child.position.x + child.radius) - (this.child.position.x + this.child.radius));
+                // const distanceY = Math.abs((child.position.y + child.radius) - (this.child.position.y + this.child.radius));
+                // if (distanceX < 0 || distanceY < 0) {
+                // }
+                const distance = Universe.distance(child.position, this.child.position);
+                if (distance <= (child.radius + this.child.radius)) {
+                    return this.child;
+                }
+            }
+
+            const halfWidth = this.width / 2;
             this.nodes = [
                 new QuadTree(new Vector(this.origin.x, this.origin.y), halfWidth),
                 new QuadTree(new Vector(this.origin.x + halfWidth, this.origin.y), halfWidth),
@@ -88,8 +105,9 @@ class QuadTree {
             // Add current pending child, then the new one.
             const pendingChild = this.child;
             this.child = null;
-            this.add(pendingChild);
-            return this.add(child);
+            const result = this.add(pendingChild, enableCollisions);
+            if (result != null) { debugger; }
+            return this.add(child, enableCollisions);
         }
 
         // Internal node, must route.
@@ -99,32 +117,13 @@ class QuadTree {
                     child.position.x >= _children.origin.x && child.position.x < _children.origin.x + _children.width
                     && child.position.y >= _children.origin.y && child.position.y < _children.origin.y + _children.width
                 ) {
-                    _children.add(child);
-                    return;
+                    return _children.add(child, enableCollisions);
                 }
             }
-            // debugger;
         }
     }
 
-    getForceFor(body, theta) {
-        const forceOnBody = Vector.null();
-        const virtualBodies = this._getVirtualBodies(body, theta);
-
-        for (const virtualBody of virtualBodies) {
-            let angle;
-            let distance = virtualBody.distance;
-            let force = G * body.mass * virtualBody.mass / (distance * distance);
-
-            angle = Math.atan2(virtualBody.position.y - body.position.y, virtualBody.position.x - body.position.x);
-            forceOnBody.x += Math.cos(angle) * force;
-            forceOnBody.y += Math.sin(angle) * force;
-        }
-
-        return forceOnBody;
-    }
-
-    _getVirtualBodies(body, theta) {
+    getVirtualBodies(body, theta) {
         if (this.child != null && this.nodes == null) {
             return [{
                 position: this.child.position,
@@ -143,7 +142,7 @@ class QuadTree {
             const localTheta = child.width / distance;
 
             if (localTheta >= theta) {
-                const bodies = child._getVirtualBodies(body, theta);
+                const bodies = child.getVirtualBodies(body, theta);
                 Array.prototype.push.apply(virtualBodies, bodies);
             } else {
                 virtualBodies.push({

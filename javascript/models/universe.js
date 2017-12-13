@@ -16,12 +16,13 @@ class Universe {
     }
 
     tick() {
-        if (this._enableCollisions) {
-            Universe.resolveCollisions(this.bodies);
-        }
+        const forces = Universe.computeForcesBarnesHut({
+            bodies: this.bodies,
+            G: this._gravitationalConstant,
+            theta: this.theta,
+            enableCollisions: this._enableCollisions,
+        });
 
-        const forces = Universe.computeForces(this.bodies, this._gravitationalConstant);
-        // const forces = this.computeForcesBarnesHut(this.bodies, this._gravitationalConstant, this.theta);
         Universe.shiftBodies(this.bodies, forces);
     }
 
@@ -143,7 +144,7 @@ class Universe {
         return forces;
     }
 
-    computeForcesBarnesHut(bodies, G, theta) {
+    static computeForcesBarnesHut({ bodies, G, theta, enableCollisions }) {
         let minX = +Infinity;
         let maxX = -Infinity;
         let minY = +Infinity;
@@ -165,14 +166,64 @@ class Universe {
         minY = Math.floor(minY - (maxDelta - deltaY) / 2) - 0.5 * margin;
         maxDelta = Math.ceil(Math.max(deltaX, deltaY)) + margin;
 
-        this.tree = new QuadTree(new Vector(minX, minY), maxDelta);
+        const collisions = enableCollisions ? new Map() : null;
+        const tree = new QuadTree(new Vector(minX, minY), maxDelta);
         for (const body of bodies) {
-            this.tree.add(body);
+            const collidedBody = tree.add(body, enableCollisions);
+            if (enableCollisions && collidedBody != null) {
+                if (!collisions.has(collidedBody)) {
+                    collisions.set(collidedBody, []);
+                }
+                collisions.get(collidedBody).push(body);
+            }
+        }
+
+        if (enableCollisions && collisions.size > 0) {
+            for (const [bodyA, collidedBodies] of collisions.entries()) {
+                for (const bodyB of collidedBodies) {
+                    // Weighted arithmetic mean, the heaviest body will proportionally conserve more of its properties.
+                    bodyA.position.x =
+                        (bodyA.position.x * bodyA.mass + bodyB.position.x * bodyB.mass) /
+                        (bodyA.mass + bodyB.mass);
+                    bodyA.position.y =
+                        (bodyA.position.y * bodyA.mass + bodyB.position.y * bodyB.mass) /
+                        (bodyA.mass + bodyB.mass);
+    
+                    bodyA.speed.x =
+                        (bodyA.speed.x * bodyA.mass + bodyB.speed.x * bodyB.mass) /
+                        (bodyA.mass + bodyB.mass);
+                    bodyA.speed.y =
+                        (bodyA.speed.y * bodyA.mass + bodyB.speed.y * bodyB.mass) /
+                        (bodyA.mass + bodyB.mass);
+    
+                    bodyA.acceleration.x =
+                        (bodyA.acceleration.x * bodyA.mass + bodyB.acceleration.x * bodyB.mass) /
+                        (bodyA.mass + bodyB.mass);
+                    bodyA.acceleration.y =
+                        (bodyA.acceleration.y * bodyA.mass + bodyB.acceleration.y * bodyB.mass) /
+                        (bodyA.mass + bodyB.mass);
+    
+                    bodyA.mass += bodyB.mass;
+                    bodies.splice(bodies.indexOf(bodyB), 1);
+                }
+            }
         }
 
         const forces = [];
         for (const body of bodies) {
-            forces.push(this.tree.getForceFor(body, theta));
+            const forceOnBody = Vector.null();
+            const virtualBodies = tree.getVirtualBodies(body, theta);
+
+            for (const virtualBody of virtualBodies) {
+                let distance = virtualBody.distance;
+                let force = G * body.mass * virtualBody.mass / (distance * distance);
+
+                const angle = Math.atan2(virtualBody.position.y - body.position.y, virtualBody.position.x - body.position.x);
+                forceOnBody.x += Math.cos(angle) * force;
+                forceOnBody.y += Math.sin(angle) * force;
+            }
+
+            forces.push(forceOnBody);
         }
 
         return forces;
