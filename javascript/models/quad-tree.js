@@ -8,6 +8,10 @@ class QuadTree {
         this.child = null;
         this._totalMass = null;
         this._centerOfMass = null;
+
+        if (width < 0.1) {
+            debugger;
+        }
     }
 
     get totalMass() {
@@ -32,6 +36,10 @@ class QuadTree {
     }
 
     get centerOfMass() {
+        if (this.isEmpty) {
+            return null;
+        }
+
         if (this._centerOfMass != null) {
             return this._centerOfMass;
         }
@@ -47,12 +55,19 @@ class QuadTree {
                 }
             }
 
-            const com_den = nodes.reduce((sum, node) => sum += node.totalMass, 0);
-            const com_x_num = nodes.map(node => node.centerOfMass.x * node.totalMass).reduce((sum, node) => sum += node, 0);
-            const com_y_num = nodes.map(node => node.centerOfMass.y * node.totalMass).reduce((sum, node) => sum += node, 0);
+            let com_den = 0;
+            for (const node of nodes) {
+                com_den += node.totalMass;
+            }
 
-            if (isNaN(com_den) || isNaN(com_x_num) || isNaN(com_y_num)) {
-                debugger;
+            let com_x_num = 0;
+            for (const node of nodes) {
+                com_x_num += (node.centerOfMass.x * node.totalMass);
+            }
+
+            let com_y_num = 0;
+            for (const node of nodes) {
+                com_y_num += (node.centerOfMass.y * node.totalMass);
             }
 
             this._centerOfMass = new Vector(com_x_num / com_den, com_y_num / com_den);
@@ -135,21 +150,20 @@ class QuadTree {
         const virtualBodies = [];
 
         for (const child of this.nodes) {
-            if (child.isEmpty) { continue; }
-            if (child.child === body) { continue; }
+            if (!(child.nodes == null && child.child == null) && child.child !== body) {
+                const distance = Universe.distance(child.centerOfMass, body.position);
+                const localTheta = child.width / distance;
 
-            const distance = Universe.distance(child.centerOfMass, body.position);
-            const localTheta = child.width / distance;
-
-            if (localTheta >= theta) {
-                const bodies = child.getVirtualBodies(body, theta);
-                Array.prototype.push.apply(virtualBodies, bodies);
-            } else {
-                virtualBodies.push({
-                    position: child.centerOfMass,
-                    mass: child.totalMass,
-                    distance: distance,
-                });
+                if (localTheta >= theta) {
+                    const bodies = child.getVirtualBodies(body, theta);
+                    Array.prototype.push.apply(virtualBodies, bodies);
+                } else {
+                    virtualBodies.push({
+                        position: child.centerOfMass,
+                        mass: child.totalMass,
+                        distance: distance,
+                    });
+                }
             }
         }
 
