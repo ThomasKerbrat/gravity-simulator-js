@@ -16,13 +16,15 @@ class Universe {
     }
 
     tick() {
-        const forces = Universe.computeForcesBarnesHut({
+        const [forces, tree] = Universe.computeForcesBarnesHut({
             bodies: this.bodies,
             G: this._gravitationalConstant,
             theta: this.theta,
             enableCollisions: this._enableCollisions,
         });
 
+        
+        this.tree = tree;
         Universe.shiftBodies(this.bodies, forces);
     }
 
@@ -226,7 +228,7 @@ class Universe {
             forces.push(forceOnBody);
         }
 
-        return forces;
+        return [forces, tree];
     }
 
 }

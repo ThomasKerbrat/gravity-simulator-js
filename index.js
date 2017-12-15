@@ -398,7 +398,7 @@ function render() {
 
     // Bodies
     for (const body of universe.bodies) {
-        const minimumRadius = 0.25;
+        const minimumRadius = 0.5;
         let screenRadius = scale(body.radius);
         if (screenRadius < minimumRadius) {
             screenRadius = minimumRadius;
@@ -445,8 +445,8 @@ function render() {
     }
 
     // Nodes
-    if (config.graphics.barnesHutTree && universe.node != null) {
-        renderNode(universe.node);
+    if (config.graphics.barnesHutTree && universe.tree != null) {
+        renderTree(universe.tree);
     }
 
     // FPS
@@ -462,31 +462,31 @@ function render() {
     ctx.fillText('' + universe.bodies.length + ' Bodies', 5, 42)
 }
 
-function renderNode(node) {
+function renderTree(tree) {
     // Box
     ctx.strokeStyle = '#040';
-    ctx.strokeRect(scaleX(node.origin.x), scaleY(node.origin.y), scale(node.width), scale(node.width));
+    ctx.strokeRect(scaleX(tree.origin.x), scaleY(tree.origin.y), scale(tree.width), scale(tree.width));
 
     // Center of mass
-    if (node.child == null && node.children != null) {
+    if (tree.child == null && tree.nodes != null) {
         ctx.beginPath()
-        ctx.arc(scaleX(node.centerOfMass.x), scaleY(node.centerOfMass.y), 1, 0, 2 * Math.PI)
+        ctx.arc(scaleX(tree.centerOfMass.x), scaleY(tree.centerOfMass.y), 1, 0, 2 * Math.PI)
         ctx.fillStyle = '#08f'
         ctx.fill()
         ctx.closePath()
     }
 
     // Children (recursive)
-    if (node.children != null) {
-        for (const subNode of node.children) {
-            if (subNode.child != null || subNode.children != null) {
-                renderNode(subNode);
+    if (tree.nodes != null) {
+        for (const subNode of tree.nodes) {
+            if (subNode.child != null || subNode.nodes != null) {
+                renderTree(subNode);
 
                 ctx.strokeStyle = subNode.child == null ? '#048' : '#084';
                 ctx.beginPath();
                 ctx.moveTo(
-                    scaleX(node.centerOfMass.x),
-                    scaleY(node.centerOfMass.y),
+                    scaleX(tree.centerOfMass.x),
+                    scaleY(tree.centerOfMass.y),
                 );
                 ctx.lineTo(
                     scaleX(subNode.centerOfMass.x),
