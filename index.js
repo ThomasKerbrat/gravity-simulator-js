@@ -224,14 +224,19 @@ function seedRandom(bodyNumber) {
     const bodies = [];
 
     for (let index = 0; index < bodyNumber; index++) {
+        const theta = Math.random() * 2 * Math.PI;
+        const distance = randomInt(1e1, 1e3);
+
         bodies.push(new Body(
             new Vector(
-                randomInt(-0.5 * playground.width, 0.5 * playground.width),
-                randomInt(-0.5 * playground.height, 0.5 * playground.height),
+                Math.cos(theta) * distance,
+                Math.sin(theta) * distance,
+                // randomInt(-0.5 * playground.width, 0.5 * playground.width),
+                // randomInt(-0.5 * playground.height, 0.5 * playground.height),
             ),
             Vector.null(),
             Vector.null(),
-            randomInt(1e10, 1e11),
+            randomInt(1e11, 1e12),
         ));
     }
 
@@ -248,7 +253,13 @@ function seedPlanetRings(bodyNumber) {
         1e16,
     ));
 
-    seedRing(bodyNumber, 2e2, 4e2, 1e10, 1e11);
+    // seedRing(1 / 12 * bodyNumber, 1e2, 2e2, 1e10, 1e11);
+    // seedRing(5 / 12 * bodyNumber, 2e2, 4e2, 1e10, 1e11);
+    // seedRing(6 / 12 * bodyNumber, 2e2, 1e3, 1e9, 1e10);
+
+    seedRing(1 / 6 * bodyNumber, 1e2, 2e2, 1e9, 1e10);
+    seedRing(2 / 6 * bodyNumber, 3e2, 4e2, 1e9, 1e10);
+    seedRing(3 / 6 * bodyNumber, 5e2, 6e2, 1e9, 1e10);
 
     function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
         for (let index = 0; index < (bodyNumber - 1); index++) {
@@ -329,7 +340,7 @@ function seedHeterogeneousDistribution(bodyNumber) {
                     ),
                     Vector.null(),
                     Vector.null(),
-                    randomInt(1e10, 1e11),
+                    randomInt(1e12, 1e12),
                 ));
             }
         }
