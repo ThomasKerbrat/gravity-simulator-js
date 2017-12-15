@@ -22,7 +22,6 @@ class Universe {
             theta: this.theta,
             enableCollisions: this._enableCollisions,
         });
-
         
         this.tree = tree;
         Universe.shiftBodies(this.bodies, forces);
@@ -32,14 +31,14 @@ class Universe {
         for (let index = 0; index < bodies.length; index++) {
             const body = bodies[index];
 
-            body.acceleration.x = forces[index].x / body.mass
-            body.acceleration.y = forces[index].y / body.mass
+            body.acceleration.x = forces[index].x / body.mass;
+            body.acceleration.y = forces[index].y / body.mass;
 
-            body.speed.x += body.acceleration.x / calculationsPerSeconds
-            body.speed.y += body.acceleration.y / calculationsPerSeconds
+            body.speed.x += body.acceleration.x / calculationsPerSeconds;
+            body.speed.y += body.acceleration.y / calculationsPerSeconds;
 
-            body.position.x += body.speed.x / calculationsPerSeconds
-            body.position.y += body.speed.y / calculationsPerSeconds
+            body.position.x += body.speed.x / calculationsPerSeconds;
+            body.position.y += body.speed.y / calculationsPerSeconds;
         }
     }
 
@@ -190,21 +189,21 @@ class Universe {
                     bodyA.position.y =
                         (bodyA.position.y * bodyA.mass + bodyB.position.y * bodyB.mass) /
                         (bodyA.mass + bodyB.mass);
-    
+
                     bodyA.speed.x =
                         (bodyA.speed.x * bodyA.mass + bodyB.speed.x * bodyB.mass) /
                         (bodyA.mass + bodyB.mass);
                     bodyA.speed.y =
                         (bodyA.speed.y * bodyA.mass + bodyB.speed.y * bodyB.mass) /
                         (bodyA.mass + bodyB.mass);
-    
+
                     bodyA.acceleration.x =
                         (bodyA.acceleration.x * bodyA.mass + bodyB.acceleration.x * bodyB.mass) /
                         (bodyA.mass + bodyB.mass);
                     bodyA.acceleration.y =
                         (bodyA.acceleration.y * bodyA.mass + bodyB.acceleration.y * bodyB.mass) /
                         (bodyA.mass + bodyB.mass);
-    
+
                     bodyA.mass += bodyB.mass;
                     bodies.splice(bodies.indexOf(bodyB), 1);
                 }
