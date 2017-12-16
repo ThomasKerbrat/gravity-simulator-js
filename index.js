@@ -18,8 +18,8 @@ const calculationsPerSeconds = 30;
 
 let universe = null;
 const playground = {
-    width: 1600,
-    height: 900,
+    width: 700,
+    height: 700,
 };
 
 let isMoving = false;
@@ -151,33 +151,39 @@ function buttonBarnesHutTreeEventHandler(event) {
 
 // #region Camera Translation
 
-canvasElement.addEventListener('mousedown', function (event) {
+canvasElement.addEventListener('mousedown', mousedownEventHandler)
+canvasElement.addEventListener('mousemove', mousemoveEventHandler)
+canvasElement.addEventListener('mouseup', mouseupEventHandler)
+canvasElement.addEventListener('dblclick', dblclickEventHandler)
+canvasElement.addEventListener('wheel', wheelEventHandler)
+
+function mousedownEventHandler(event) {
     isMoving = true
     mouseMoveOrigin = {
         x: event.clientX - cameraTranslation.x,
         y: event.clientY - cameraTranslation.y,
     }
-})
+}
 
-canvasElement.addEventListener('mousemove', function (event) {
+function mousemoveEventHandler(event) {
     if (isMoving) {
         cameraTranslation.x = event.clientX - mouseMoveOrigin.x
         cameraTranslation.y = event.clientY - mouseMoveOrigin.y
     }
-})
+}
 
-canvasElement.addEventListener('mouseup', function (event) {
+function mouseupEventHandler(event) {
     isMoving = false
-})
+}
 
-canvasElement.addEventListener('dblclick', function (event) {
+function dblclickEventHandler(event) {
     cameraTranslation.x = playground.width / 2
     cameraTranslation.y = playground.height / 2
     cameraTranslation.zoom = 1
     event.preventDefault();
-})
+}
 
-canvasElement.addEventListener('wheel', function (event) {
+function wheelEventHandler(event) {
     let fixedX;
     let fixedY;
 
@@ -189,15 +195,19 @@ canvasElement.addEventListener('wheel', function (event) {
         fixedY = event.clientY;
     }
 
+    updateCameraTranslation(fixedX, fixedY, event.deltaY);
+    event.preventDefault();
+}
+
+function updateCameraTranslation(fixedX, fixedY, delta) {
     // NOTE: I do not understand why this works.
-    const newZoom = cameraTranslation.zoom * (event.deltaY > 0 ? 0.9 : 1.1);
+    const newZoom = cameraTranslation.zoom * (delta > 0 ? 0.9 : 1.1);
     const x = (cameraTranslation.x - fixedX) / cameraTranslation.zoom;
     const y = (cameraTranslation.y - fixedY) / cameraTranslation.zoom;
     cameraTranslation.x = (x * newZoom) + fixedX;
     cameraTranslation.y = (y * newZoom) + fixedY;
     cameraTranslation.zoom = newZoom;
-    event.preventDefault();
-})
+}
 
 // #endregion
 
@@ -206,6 +216,8 @@ document.addEventListener('keydown', function (event) {
         case ' ': config.graphics.intervalID == null ? buttonStartEventHandler(event) : buttonPauseEventHandler(event); break;
         case 's': buttonStepEventHandler(event); break;
         case 'c': buttonClearEventHandler(event); break;
+        case '-': updateCameraTranslation(playground.width / 2, playground.height / 2, 1); break;
+        case '+': updateCameraTranslation(playground.width / 2, playground.height / 2, -1); break;
         // TODO
         // case 'v': buttonVelocityVectorEventHandler(event); break;
         // case 'a': buttonAccelerationVectorEventHandler(event); break;
@@ -246,26 +258,53 @@ function seedRandom(bodyNumber) {
 function seedPlanetRings(bodyNumber) {
     const bodies = [];
 
+    const centralBodyMass = 1e16;
     bodies.push(new Body(
         new Vector(0, 0),
         Vector.null(),
         Vector.null(),
-        1e16,
+        centralBodyMass,
     ));
 
     // seedRing(1 / 12 * bodyNumber, 1e2, 2e2, 1e10, 1e11);
     // seedRing(5 / 12 * bodyNumber, 2e2, 4e2, 1e10, 1e11);
     // seedRing(6 / 12 * bodyNumber, 2e2, 1e3, 1e9, 1e10);
 
-    seedRing(1 / 6 * bodyNumber, 1e2, 2e2, 1e9, 1e10);
-    seedRing(2 / 6 * bodyNumber, 3e2, 4e2, 1e9, 1e10);
-    seedRing(3 / 6 * bodyNumber, 5e2, 6e2, 1e9, 1e10);
+    // seedRing(1 / 6 * bodyNumber, 1e2, 2e2, 1e9, 1e10);
+    // seedRing(2 / 6 * bodyNumber, 3e2, 4e2, 1e9, 1e10);
+    // seedRing(3 / 6 * bodyNumber, 5e2, 6e2, 1e9, 1e10);
+
+    // seedRing(1 / 3 * bodyNumber, 3e2, 5e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
+    // seedRing(2 / 3 * bodyNumber, 10e2, 15e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
+
+    seedRing(bodyNumber, 1e2, 5e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
 
     function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
-        for (let index = 0; index < (bodyNumber - 1); index++) {
+        const massiveBodyNumber = 10;
+        for (let index = 0; index < massiveBodyNumber; index++) {
             const tetha = Math.random() * 2 * Math.PI;
             const distance = Math.random() * (dMax - dMin) + dMin;
-            const velocity = Math.sqrt((G * 1e16) / distance) * 0.99e0;
+            const velocity = Math.sqrt((G * centralBodyMass) / distance) * 1e0;
+            const mass = 10 * mMax;
+
+            bodies.push(new Body(
+                new Vector(
+                    Math.cos(tetha) * distance,
+                    Math.sin(tetha) * distance,
+                ),
+                new Vector(
+                    Math.cos(tetha - 0.5 * Math.PI) * velocity,
+                    Math.sin(tetha - 0.5 * Math.PI) * velocity,
+                ),
+                Vector.null(),
+                mass,
+            ));
+        }
+
+        for (let index = 0; index < (bodyNumber - 1 - massiveBodyNumber); index++) {
+            const tetha = Math.random() * 2 * Math.PI;
+            const distance = Math.random() * (dMax - dMin) + dMin;
+            const velocity = Math.sqrt((G * centralBodyMass) / distance) * 1e0;
             const mass = randomInt(mMin, mMax);
 
             bodies.push(new Body(
@@ -407,13 +446,20 @@ function render() {
     ctx.fillStyle = 'black'
     ctx.fillRect(0, 0, playground.width, playground.height)
 
+    // Outward bound
+    ctx.beginPath()
+    ctx.arc(scaleX(0), scaleY(0), scale(universe.outwardBoundLimit), 0, 2 * Math.PI)
+    ctx.strokeStyle = 'red'
+    ctx.stroke()
+    ctx.closePath()
+
     // Bodies
     for (const body of universe.bodies) {
         const minimumRadius = 0.5;
         let screenRadius = scale(body.radius);
-        if (screenRadius < minimumRadius) {
-            screenRadius = minimumRadius;
-        }
+        // if (screenRadius < minimumRadius) {
+        //     screenRadius = minimumRadius;
+        // }
 
         // body
         ctx.beginPath()
