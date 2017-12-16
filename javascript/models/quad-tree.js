@@ -8,10 +8,6 @@ class QuadTree {
         this.child = null;
         this._totalMass = null;
         this._centerOfMass = null;
-
-        if (width < 0.1) {
-            debugger;
-        }
     }
 
     get totalMass() {
