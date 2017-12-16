@@ -13,18 +13,31 @@ class Universe {
         this.theta = theta;
         this.bodies = [];
         this.tree = null;
+        this.outwardBoundLimit = 2e3;
     }
 
     tick() {
+        Universe.deleteOutOfBoundBodies(this.bodies, this.outwardBoundLimit);
         const [forces, tree] = Universe.computeForcesBarnesHut({
             bodies: this.bodies,
             G: this._gravitationalConstant,
             theta: this.theta,
             enableCollisions: this._enableCollisions,
         });
-        
+
         this.tree = tree;
         Universe.shiftBodies(this.bodies, forces);
+    }
+
+    static deleteOutOfBoundBodies(bodies, outwardBoundLimit) {
+        for (let index = 0; index < bodies.length; index++) {
+            const body = bodies[index];
+            if (Universe.distance(Vector.null(), body.position) > outwardBoundLimit) {
+                bodies[index] = null;
+                bodies.splice(index, 1);
+                index = index - 1;
+            }
+        }
     }
 
     static shiftBodies(bodies, forces) {
