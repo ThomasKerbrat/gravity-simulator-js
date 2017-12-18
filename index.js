@@ -216,13 +216,13 @@ document.addEventListener('keydown', function (event) {
         case ' ': config.graphics.intervalID == null ? buttonStartEventHandler(event) : buttonPauseEventHandler(event); break;
         case 's': buttonStepEventHandler(event); break;
         case 'c': buttonClearEventHandler(event); break;
-        case '-': updateCameraTranslation(playground.width / 2, playground.height / 2, 1); break;
-        case '+': updateCameraTranslation(playground.width / 2, playground.height / 2, -1); break;
+        case '-': case 'o': updateCameraTranslation(playground.width / 2, playground.height / 2, 1); break;
+        case '+': case 'i': updateCameraTranslation(playground.width / 2, playground.height / 2, -1); break;
         // TODO
         // case 'v': buttonVelocityVectorEventHandler(event); break;
         // case 'a': buttonAccelerationVectorEventHandler(event); break;
         // case 'b': buttonBarycenterEventHandler(event); break;
-        default: break;
+        default: console.log(event); break;
     }
 })
 
@@ -277,7 +277,7 @@ function seedPlanetRings(bodyNumber) {
     // seedRing(1 / 3 * bodyNumber, 3e2, 5e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
     // seedRing(2 / 3 * bodyNumber, 10e2, 15e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
 
-    seedRing(bodyNumber, 1e2, 5e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
+    seedRing(bodyNumber, 1e2, 2e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
 
     function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
         const massiveBodyNumber = 10;
@@ -366,16 +366,18 @@ function seedStarSystem(bodyNumber) {
 
 function seedHeterogeneousDistribution(bodyNumber) {
     const bodies = [];
+    const numberOfCells = 8;
+    const width = playground.width * 4;
+    const height = playground.height * 4;
 
-    const numberOfCells = 8
     for (let i = 0; i < numberOfCells; i++) {
         for (let j = 0; j < numberOfCells; j++) {
             const numberOfBodies = Math.floor(Math.random() * (bodyNumber * 2 / Math.pow(numberOfCells, 2)));
             for (let k = 0; k < numberOfBodies; k++) {
                 bodies.push(new Body(
                     new Vector(
-                        Math.random() * (playground.width / numberOfCells) + (i * playground.width / numberOfCells) - playground.width / 2,
-                        Math.random() * (playground.height / numberOfCells) + (j * playground.height / numberOfCells) - playground.height / 2,
+                        Math.random() * (width / numberOfCells) + (i * width / numberOfCells) - width / 2,
+                        Math.random() * (height / numberOfCells) + (j * height / numberOfCells) - height / 2,
                     ),
                     Vector.null(),
                     Vector.null(),
@@ -457,9 +459,9 @@ function render() {
     for (const body of universe.bodies) {
         const minimumRadius = 0.5;
         let screenRadius = scale(body.radius);
-        // if (screenRadius < minimumRadius) {
-        //     screenRadius = minimumRadius;
-        // }
+        if (screenRadius < minimumRadius) {
+            screenRadius = minimumRadius;
+        }
 
         // body
         ctx.beginPath()
