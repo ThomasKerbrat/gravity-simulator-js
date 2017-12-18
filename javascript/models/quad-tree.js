@@ -134,7 +134,7 @@ class QuadTree {
         }
     }
 
-    getVirtualBodies(body, theta) {
+    getVirtualBodies(body, theta, excludeBody) {
         if (this.child != null && this.nodes == null) {
             return [{
                 position: this.child.position,
@@ -146,12 +146,12 @@ class QuadTree {
         const virtualBodies = [];
 
         for (const child of this.nodes) {
-            if (!(child.nodes == null && child.child == null) && child.child !== body) {
+            if (!(child.nodes == null && child.child == null) && child.child !== body && child.child !== excludeBody) {
                 const distance = Universe.distance(child.centerOfMass, body.position);
                 const localTheta = child.width / distance;
 
                 if (localTheta >= theta) {
-                    const bodies = child.getVirtualBodies(body, theta);
+                    const bodies = child.getVirtualBodies(body, theta, excludeBody);
                     Array.prototype.push.apply(virtualBodies, bodies);
                 } else {
                     virtualBodies.push({
