@@ -35,6 +35,15 @@ let cameraTranslation = {
     zoom: 1,
 };
 
+let closestBody = null;
+let selectedBody = null;
+const lastMousePosition = { x: null, y: null };
+
+const MouseMode = {
+    Move: 0,
+    Select: 1,
+};
+
 const config = {
     simulation: {
         collisions: true,
@@ -44,7 +53,8 @@ const config = {
         acceleration: false,
         barnesHutTree: false,
         intervalID: null,
-    }
+    },
+    mouse: MouseMode.Move,
 };
 
 ctx.translate(0.5, 0.5);
@@ -72,6 +82,9 @@ document.getElementById('button-seed').addEventListener('click', buttonSeedEvent
 document.getElementById('button-velocity-vector').addEventListener('click', buttonVelocityVectorEventHandler);
 document.getElementById('button-acceleration-vector').addEventListener('click', buttonAccelerationVectorEventHandler);
 document.getElementById('button-barnes-hut-tree').addEventListener('click', buttonBarnesHutTreeEventHandler);
+
+document.querySelector('#input-mouse-move').addEventListener('click', mouseMoveEventHandler);
+document.querySelector('#input-mouse-select').addEventListener('click', mouseSelectEventHandler);
 
 
 
@@ -152,6 +165,14 @@ function buttonBarnesHutTreeEventHandler(event) {
     config.graphics.barnesHutTree = event.target.checked;
 }
 
+function mouseMoveEventHandler(event) {
+    config.mouse = MouseMode.Move;
+}
+
+function mouseSelectEventHandler(event) {
+    config.mouse = MouseMode.Select;
+}
+
 
 
 // #region Camera Translation
@@ -163,17 +184,51 @@ canvasElement.addEventListener('dblclick', dblclickEventHandler)
 canvasElement.addEventListener('wheel', wheelEventHandler)
 
 function mousedownEventHandler(event) {
-    isMoving = true
-    mouseMoveOrigin = {
-        x: event.clientX - cameraTranslation.x,
-        y: event.clientY - cameraTranslation.y,
+    switch (config.mouse) {
+        case MouseMode.Move:
+            isMoving = true
+            mouseMoveOrigin = {
+                x: event.clientX - cameraTranslation.x,
+                y: event.clientY - cameraTranslation.y,
+            }
+            break;
+        case MouseMode.Select:
+            selectedBody = closestBody;
+            closestBody = null;
+            config.mouse = MouseMode.Move;
+            document.querySelector('#input-mouse-move').checked = true;
+            document.querySelector('#input-mouse-select').checked = false;
+            break;
     }
 }
 
 function mousemoveEventHandler(event) {
-    if (isMoving) {
-        cameraTranslation.x = event.clientX - mouseMoveOrigin.x
-        cameraTranslation.y = event.clientY - mouseMoveOrigin.y
+    switch (config.mouse) {
+        case MouseMode.Move:
+            if (isMoving) {
+                cameraTranslation.x = event.clientX - mouseMoveOrigin.x
+                cameraTranslation.y = event.clientY - mouseMoveOrigin.y
+            }
+            break;
+        case MouseMode.Select:
+            if (universe != null) {
+                const x = (event.clientX - cameraTranslation.x) / cameraTranslation.zoom;
+                const y = (event.clientY - cameraTranslation.y) / cameraTranslation.zoom;
+
+                lastMousePosition.x = x;
+                lastMousePosition.y = y;
+
+                closestBody = null;
+                let minDistance = Infinity;
+                for (const body of universe.bodies) {
+                    const distance = Universe.distance({ x, y }, body.position);
+                    if (distance < minDistance) {
+                        closestBody = body;
+                        minDistance = distance;
+                    }
+                }
+            }
+            break;
     }
 }
 
@@ -282,7 +337,7 @@ function seedPlanetRings(bodyNumber) {
     // seedRing(1 / 3 * bodyNumber, 3e2, 5e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
     // seedRing(2 / 3 * bodyNumber, 10e2, 15e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
 
-    seedRing(bodyNumber, 2e2, 5e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
+    seedRing(bodyNumber, 3e2, 4e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
 
     function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
         const massiveBodyNumber = 10;
@@ -347,7 +402,7 @@ function seedStarSystem(bodyNumber) {
     const dMin = 100;
 
     for (let index = 0; index < (bodyNumber - 1); index++) {
-        const tetha = 0; // Math.random() * 2 * Math.PI;
+        const tetha = Math.random() * 2 * Math.PI;
         const distance = ((index + 1) / bodyNumber) * (dMax - dMin) + dMin;
         const velocity = Math.sqrt((G * 1e16) / distance) * 1e0;
         const mass = 1e12;
@@ -466,10 +521,30 @@ function render() {
             screenRadius = minimumRadius;
         }
 
+        // selected body
+        if (closestBody === body) {
+            ctx.strokeStyle = 'cyan';
+            ctx.beginPath();
+            ctx.moveTo(
+                scaleX(lastMousePosition.x),
+                scaleY(lastMousePosition.y),
+            );
+            ctx.lineTo(
+                scaleX(body.position.x),
+                scaleY(body.position.y),
+            );
+            ctx.stroke();
+            ctx.closePath();
+        }
+
         // body
         ctx.beginPath()
         ctx.arc(scaleX(body.position.x), scaleY(body.position.y), screenRadius, 0, 2 * Math.PI)
-        ctx.fillStyle = 'white'
+        ctx.fillStyle = selectedBody === body
+            ? 'blue'
+            : closestBody === body
+                ? 'blue'
+                : 'white'
         ctx.fill()
         ctx.closePath()
 
@@ -504,6 +579,23 @@ function render() {
             ctx.stroke()
             ctx.closePath()
         }
+    }
+
+    // Projected path for selected body
+    if (selectedBody != null) {
+        const path = universe.getProjectedPath(selectedBody);
+
+        ctx.strokeStyle = 'cyan';
+        ctx.beginPath();
+        ctx.moveTo(
+            scaleX(selectedBody.position.x),
+            scaleY(selectedBody.position.y),
+        );
+        for (const point of path) {
+            ctx.lineTo(scaleX(point.x), scaleY(point.y), );
+        }
+        ctx.stroke();
+        ctx.closePath();
     }
 
     // Nodes
