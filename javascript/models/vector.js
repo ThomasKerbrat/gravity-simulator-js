@@ -14,6 +14,10 @@ class Vector {
         this.y += vector.y;
     }
 
+    clone() {
+        return new Vector(this.x, this.y);
+    }
+
     static angle(vector1, vector2) {
         if (arguments.length === 1)
             return Math.atan2(vector1.y, vector1.x);

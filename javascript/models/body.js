@@ -28,4 +28,8 @@ class Body {
         // return this._radius = Math.log10(this._mass) / 2;
         // return this._radius = 2;
     }
+
+    clone() {
+        return new Body(this.position.clone(), this.speed.clone(), this.acceleration.clone(), this.mass);
+    }
 }
