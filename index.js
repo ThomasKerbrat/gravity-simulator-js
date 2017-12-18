@@ -1,7 +1,6 @@
 
 /**
  * TODO:
- * - Camera zoom
  * - Camera follow
  * - Separation computation/replay
  */
@@ -10,16 +9,22 @@
 
 // #region Global variables
 
-const canvasElement = document.getElementById('canvas');
+const canvasElement = document.querySelector('#canvas');
 const ctx = canvasElement.getContext('2d');
+
+const canvasContainerElement = document.querySelector('.gs-canvas-container');
+const canvasWidth = Math.floor((canvasContainerElement.offsetWidth - 5) / 10) * 10;
+const canvasHeight = Math.floor((canvasContainerElement.offsetHeight - 5) / 10) * 10;
+canvasElement.setAttribute('width', canvasWidth);
+canvasElement.setAttribute('height', canvasHeight);
 
 const G = 6.67408e-11;
 const calculationsPerSeconds = 30;
 
 let universe = null;
 const playground = {
-    width: 700,
-    height: 700,
+    width: canvasWidth,
+    height: canvasHeight,
 };
 
 let isMoving = false;
