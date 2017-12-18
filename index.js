@@ -282,7 +282,7 @@ function seedPlanetRings(bodyNumber) {
     // seedRing(1 / 3 * bodyNumber, 3e2, 5e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
     // seedRing(2 / 3 * bodyNumber, 10e2, 15e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
 
-    seedRing(bodyNumber, 1e2, 2e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
+    seedRing(bodyNumber, 2e2, 5e2, centralBodyMass / 1e6, centralBodyMass / 1e5);
 
     function seedRing(bodyNumber, dMin, dMax, mMin, mMax) {
         const massiveBodyNumber = 10;
@@ -398,10 +398,8 @@ function seedHeterogeneousDistribution(bodyNumber) {
 function seedTwoClouds(bodyNumber) {
     const bodies = [];
 
-    seedCloud(bodyNumber / 4, -500, -500, 250);
-    seedCloud(bodyNumber / 4, -500, 500, 250);
-    seedCloud(bodyNumber / 4, 500, -500, 250);
-    seedCloud(bodyNumber / 4, 500, 500, 250);
+    seedCloud(bodyNumber / 2, -500, -500, 250);
+    seedCloud(bodyNumber / 2, 500, 500, 250);
 
     return bodies;
 
