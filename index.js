@@ -504,11 +504,11 @@ let lastDisplay = { time: Date.now(), value: 0 }
 function render() {
     requestAnimationFrame(render);
 
-    if (universe == null) { return; }
-
     // Clean
-    ctx.fillStyle = 'black'
-    ctx.fillRect(0, 0, playground.width, playground.height)
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, playground.width, playground.height);
+
+    if (universe == null) { return; }
 
     // Outward bound
     ctx.beginPath()
