@@ -6,13 +6,14 @@ class Universe {
         gravitationalConstant,
         enableCollisions,
         theta,
+        bodies,
     }) {
         this._computationsPerSecond = computationsPerSecond;
         this._gravitationalConstant = gravitationalConstant;
         this._enableCollisions = enableCollisions;
         this.theta = theta;
+        this.bodies = bodies;
 
-        this.bodies = [];
         this.tree = null;
         this.outwardBoundLimit = 2e3;
     }

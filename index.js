@@ -107,7 +107,8 @@ function buttonStepEventHandler(event) {
 
 function buttonClearEventHandler(event) {
     buttonPauseEventHandler();
-    universe.bodies = [];
+    universe = null;
+    selectedBody = null;
 
     const inputGroupControlsElement = document.getElementById('input-group-controls');
     const inputGroupSimulationParametersElement = document.getElementById('input-group-simulation-parameters');
@@ -128,21 +129,24 @@ function buttonSeedEventHandler(event) {
     const inputCollisions = document.getElementById('input-collisions').checked;
 
     if (inputSeedElement != null && !Number.isNaN(inputBodyNumber)) {
+        let bodies;
+
+        switch (inputSeedElement.id) {
+            case 'input-seed-random': bodies = seedRandom(inputBodyNumber); break;
+            case 'input-seed-planet-rings': bodies = seedPlanetRings(inputBodyNumber); break;
+            case 'input-seed-star-system': bodies = seedStarSystem(inputBodyNumber); break;
+            case 'input-seed-heterogeneous-distribution': bodies = seedHeterogeneousDistribution(inputBodyNumber); break;
+            case 'input-seed-two-clouds': bodies = seedTwoClouds(inputBodyNumber); break;
+            default: throw new Error('Unexpected input-seed element id: ' + inputSeedElement.id); break;
+        }
+
         universe = new Universe({
             computationsPerSecond: calculationsPerSeconds,
             gravitationalConstant: G,
             enableCollisions: inputCollisions,
             theta: inputTheta,
+            bodies: bodies,
         });
-
-        switch (inputSeedElement.id) {
-            case 'input-seed-random': universe.bodies = seedRandom(inputBodyNumber); break;
-            case 'input-seed-planet-rings': universe.bodies = seedPlanetRings(inputBodyNumber); break;
-            case 'input-seed-star-system': universe.bodies = seedStarSystem(inputBodyNumber); break;
-            case 'input-seed-heterogeneous-distribution': universe.bodies = seedHeterogeneousDistribution(inputBodyNumber); break;
-            case 'input-seed-two-clouds': universe.bodies = seedTwoClouds(inputBodyNumber); break;
-            default: throw new Error('Unexpected input-seed element id: ' + inputSeedElement.id); break;
-        }
 
         const inputGroupControlsElement = document.getElementById('input-group-controls');
         const inputGroupSimulationParametersElement = document.getElementById('input-group-simulation-parameters');
