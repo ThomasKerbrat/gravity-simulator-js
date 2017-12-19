@@ -21,7 +21,7 @@ class Universe {
     tick() {
         this.deleteOutOfBoundBodies(this.bodies, this.outwardBoundLimit);
         this.computeBarnesHutTree(this.bodies);
-        const forces = this.computeBarnesHutForces({ bodies: this.bodies, G: this._gravitationalConstant, enableCollisions: this._enableCollisions });
+        const forces = this.computeBarnesHutForces({ bodies: this.bodies, G: this._gravitationalConstant });
         this.shiftBodies(this.bodies, forces);
     }
 
@@ -51,50 +51,9 @@ class Universe {
         }
     }
 
-    computeBarnesHutForces({ bodies, G, enableCollisions }) {
-        const collisions = enableCollisions ? new Map() : null;
-        for (const body of bodies) {
-            const collidedBody = this.tree.add(body, enableCollisions);
-            if (enableCollisions && collidedBody != null) {
-                if (!collisions.has(collidedBody)) {
-                    collisions.set(collidedBody, []);
-                }
-                collisions.get(collidedBody).push(body);
-            }
-        }
-
-        if (enableCollisions && collisions.size > 0) {
-            for (const [bodyA, collidedBodies] of collisions.entries()) {
-                for (const bodyB of collidedBodies) {
-                    // Weighted arithmetic mean, the heaviest body will proportionally conserve more of its properties.
-                    bodyA.position.x =
-                        (bodyA.position.x * bodyA.mass + bodyB.position.x * bodyB.mass) /
-                        (bodyA.mass + bodyB.mass);
-                    bodyA.position.y =
-                        (bodyA.position.y * bodyA.mass + bodyB.position.y * bodyB.mass) /
-                        (bodyA.mass + bodyB.mass);
-
-                    bodyA.speed.x =
-                        (bodyA.speed.x * bodyA.mass + bodyB.speed.x * bodyB.mass) /
-                        (bodyA.mass + bodyB.mass);
-                    bodyA.speed.y =
-                        (bodyA.speed.y * bodyA.mass + bodyB.speed.y * bodyB.mass) /
-                        (bodyA.mass + bodyB.mass);
-
-                    bodyA.acceleration.x =
-                        (bodyA.acceleration.x * bodyA.mass + bodyB.acceleration.x * bodyB.mass) /
-                        (bodyA.mass + bodyB.mass);
-                    bodyA.acceleration.y =
-                        (bodyA.acceleration.y * bodyA.mass + bodyB.acceleration.y * bodyB.mass) /
-                        (bodyA.mass + bodyB.mass);
-
-                    bodyA.mass += bodyB.mass;
-                    bodies.splice(bodies.indexOf(bodyB), 1);
-                }
-            }
-        }
-
+    computeBarnesHutForces({ bodies, G }) {
         const forces = [];
+
         for (const body of bodies) {
             const forceOnBody = Vector.null();
             const virtualBodies = this.tree.getVirtualBodies(body, this.theta);
@@ -137,6 +96,51 @@ class Universe {
         maxDelta = Math.ceil(Math.max(deltaX, deltaY)) + margin;
 
         this.tree = new QuadTree(new Vector(minX, minY), maxDelta);
+        const collisions = this._enableCollisions ? new Map() : null;
+        for (const body of bodies) {
+            const collidedBody = this.tree.add(body, this._enableCollisions);
+            if (this._enableCollisions && collidedBody != null) {
+                if (!collisions.has(collidedBody)) {
+                    collisions.set(collidedBody, []);
+                }
+                collisions.get(collidedBody).push(body);
+            }
+        }
+
+        if (this._enableCollisions && collisions.size > 0) {
+            for (const [bodyA, collidedBodies] of collisions.entries()) {
+                this.computeCollision(bodies, bodyA, collidedBodies);
+            }
+        }
+    }
+
+    computeCollision(bodies, bodyA, collidedBodies) {
+        for (const bodyB of collidedBodies) {
+            // Weighted arithmetic mean, the heaviest body will proportionally conserve more of its properties.
+            bodyA.position.x =
+                (bodyA.position.x * bodyA.mass + bodyB.position.x * bodyB.mass) /
+                (bodyA.mass + bodyB.mass);
+            bodyA.position.y =
+                (bodyA.position.y * bodyA.mass + bodyB.position.y * bodyB.mass) /
+                (bodyA.mass + bodyB.mass);
+
+            bodyA.speed.x =
+                (bodyA.speed.x * bodyA.mass + bodyB.speed.x * bodyB.mass) /
+                (bodyA.mass + bodyB.mass);
+            bodyA.speed.y =
+                (bodyA.speed.y * bodyA.mass + bodyB.speed.y * bodyB.mass) /
+                (bodyA.mass + bodyB.mass);
+
+            bodyA.acceleration.x =
+                (bodyA.acceleration.x * bodyA.mass + bodyB.acceleration.x * bodyB.mass) /
+                (bodyA.mass + bodyB.mass);
+            bodyA.acceleration.y =
+                (bodyA.acceleration.y * bodyA.mass + bodyB.acceleration.y * bodyB.mass) /
+                (bodyA.mass + bodyB.mass);
+
+            bodyA.mass += bodyB.mass;
+            bodies.splice(bodies.indexOf(bodyB), 1);
+        }
     }
 
     getProjectedPath(body) {
