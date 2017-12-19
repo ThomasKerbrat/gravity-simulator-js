@@ -16,6 +16,9 @@ class Universe {
 
         this.tree = null;
         this.outwardBoundLimit = 2e3;
+
+        this.deleteOutOfBoundBodies(this.bodies, this.outwardBoundLimit);
+        this.computeBarnesHutTree(this.bodies);
     }
 
     tick() {
@@ -147,7 +150,10 @@ class Universe {
         const path = [];
         const clone = body.clone();
 
-        while (path.length < 500) {
+        let lastAngle;
+        let remainingAngle = 1.95 * Math.PI;
+
+        while (remainingAngle > 0 && path.length < 2000) {
             const forces = Vector.null();
             const virtualBodies = this.tree.getVirtualBodies(clone, this.theta, body);
 
@@ -168,6 +174,17 @@ class Universe {
             clone.position.y += clone.speed.y / this._computationsPerSecond;
 
             path.push(clone.position.clone());
+
+            const point = path[path.length - 1];
+            if (path.length === 1) {
+                lastAngle = Math.atan2(point.y, point.x);
+            } else {
+                const newAngle = Math.atan2(point.y, point.x);
+                remainingAngle -= (newAngle > 0 && lastAngle < 0)
+                    ? (lastAngle - (newAngle - 2 * Math.PI))
+                    : (lastAngle - newAngle);
+                lastAngle = newAngle;
+            }
         }
 
         return path;
