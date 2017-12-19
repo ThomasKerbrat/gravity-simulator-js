@@ -22,11 +22,7 @@ class Body {
     }
 
     computeRadius() {
-        // Compute the radius for a sphere from volume = mass
-        return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / 7.5e3;
-        // log10
-        // return this._radius = Math.log10(this._mass) / 2;
-        // return this._radius = 2;
+        return this._radius = Math.pow(3 / 4 * this._mass / Math.PI, 1 / 3) / 5e3;
     }
 
     clone() {

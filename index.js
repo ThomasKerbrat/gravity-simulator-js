@@ -406,7 +406,7 @@ function seedStarSystem(bodyNumber) {
     const dMin = 100;
 
     for (let index = 0; index < (bodyNumber - 1); index++) {
-        const tetha = Math.random() * 2 * Math.PI;
+        const tetha = 0; // Math.random() * 2 * Math.PI;
         const distance = ((index + 1) / bodyNumber) * (dMax - dMin) + dMin;
         const velocity = Math.sqrt((G * 1e16) / distance) * 1e0;
         const mass = 1e12;
