@@ -525,10 +525,7 @@ function render() {
     // Bodies
     for (const body of universe.bodies) {
         const minimumRadius = 0.5;
-        let screenRadius = scale(body.radius);
-        if (screenRadius < minimumRadius) {
-            screenRadius = minimumRadius;
-        }
+        const screenRadius = Math.max(scale(body.radius), minimumRadius);
 
         // selected body
         if (closestBody === body) {
