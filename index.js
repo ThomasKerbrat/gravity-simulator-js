@@ -39,10 +39,10 @@ let closestBody = null;
 let selectedBody = null;
 const lastMousePosition = { x: null, y: null };
 
-const MouseMode = {
+const MouseMode = Object.freeze({
     Move: 0,
     Select: 1,
-};
+});
 
 const config = {
     simulation: {
@@ -241,10 +241,14 @@ function mouseupEventHandler(event) {
 }
 
 function dblclickEventHandler(event) {
-    cameraTranslation.x = playground.width / 2
-    cameraTranslation.y = playground.height / 2
-    cameraTranslation.zoom = 1
+    resetCamera();
     event.preventDefault();
+}
+
+function resetCamera() {
+    cameraTranslation.x = playground.width / 2;
+    cameraTranslation.y = playground.height / 2;
+    cameraTranslation.zoom = 1;
 }
 
 function wheelEventHandler(event) {
@@ -281,7 +285,8 @@ document.addEventListener('keydown', function (event) {
         case 's': buttonStepEventHandler(event); break;
         case 'c': buttonClearEventHandler(event); break;
         case '-': case 'o': updateCameraTranslation(playground.width / 2, playground.height / 2, 1); break;
-        case '+': case 'i': updateCameraTranslation(playground.width / 2, playground.height / 2, -1); break;
+        case '+': case 'i': updateCameraTranslation(playground.width / 2, playground.height / 2, 0); break;
+        case '0': resetCamera(); break;
         // TODO
         // case 'v': buttonVelocityVectorEventHandler(event); break;
         // case 'a': buttonAccelerationVectorEventHandler(event); break;
